@@ -13,20 +13,13 @@
       --surface: #ffffff;
       --surface2: #eeecea;
       --border: rgba(0,0,0,0.08);
-      --border-md: rgba(0,0,0,0.13);
+      --border-md: rgba(0,0,0,0.14);
       --text: #1a1917;
       --text-sec: #6b6a66;
       --text-hint: #a09e9a;
       --line: #ccc9c2;
       --radius: 10px;
       --radius-sm: 7px;
-
-      /* Level colors */
-      --c1-bg: #1D9E75; --c1-txt: #fff;       /* Unit Layanan - hijau */
-      --c2-bg: #E6F1FB; --c2-txt: #0C447C;    /* Kantor - biru */
-      --c3-bg: #FAEEDA; --c3-txt: #633806;    /* Org Unit - amber */
-      --c4-bg: #E1F5EE; --c4-txt: #085041;    /* Atasan - teal */
-      --c5-bg: #ffffff; --c5-txt: #1a1917;    /* Pegawai - putih */
     }
 
     body {
@@ -37,7 +30,7 @@
       font-size: 14px;
     }
 
-    .page { max-width: 1300px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .page { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
 
     .page-header { margin-bottom: 1.75rem; }
     .page-title { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
@@ -60,8 +53,8 @@
       min-width: 200px;
     }
     .controls select:focus { border-color: #1D9E75; }
-    .controls select:disabled { opacity: 0.5; cursor: default; }
-    .arrow-sep { color: var(--text-hint); font-size: 16px; }
+    .controls select:disabled { opacity: 0.45; cursor: default; }
+    .arrow-sep { color: var(--text-hint); font-size: 18px; font-weight: 300; }
     .count-badge {
       font-size: 12px; color: var(--text-sec);
       background: var(--surface2);
@@ -77,132 +70,104 @@
     .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-sec); }
     .legend-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
 
-    /* Tree */
-    .tree-wrap { overflow-x: auto; padding-bottom: 1rem; }
+    /* Tree scroll */
+    .tree-wrap { overflow-x: auto; overflow-y: visible; padding-bottom: 2rem; }
 
-    /* Node styles */
+    /* Node base */
     .node {
-      display: inline-flex;
-      flex-direction: column;
       border-radius: var(--radius-sm);
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 500;
-      white-space: nowrap;
+      padding: 9px 14px;
       border: 0.5px solid var(--border-md);
-      min-width: 130px;
-      max-width: 240px;
+      min-width: 140px;
+      max-width: 220px;
+      display: inline-block;
       vertical-align: top;
-      line-height: 1.4;
     }
-    .node-sub {
+    .node-row1 { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .node-row2 { font-size: 12px; font-weight: 400; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+    .peg-tag {
+      font-family: 'DM Mono', monospace;
       font-size: 11px;
-      font-weight: 400;
-      margin-top: 2px;
-      opacity: 0.75;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .node-peg-name { font-weight: 500; font-size: 13px; }
-    .node-peg-peg  { font-size: 12px; font-family: 'DM Mono', monospace; opacity: 0.6; margin-left: 6px; }
-    .node-peg-jab  { font-size: 11px; font-weight: 400; margin-top: 2px; opacity: 0.65; }
-
-    .node-1 { background: var(--c1-bg); color: var(--c1-txt); border-color: #0F6E56; }
-    .node-2 { background: var(--c2-bg); color: var(--c2-txt); border-color: #B5D4F4; }
-    .node-3 { background: var(--c3-bg); color: var(--c3-txt); border-color: #FAC775; }
-    .node-4 { background: var(--c4-bg); color: var(--c4-txt); border-color: #9FE1CB; }
-    .node-5 { background: var(--c5-bg); color: var(--c5-txt); border-color: var(--border-md); }
-
-    /* Tree layout using nested ul/li */
-    .tree ul { list-style: none; padding: 0; margin: 0; }
-
-    .tree li {
-      display: flex;
-      flex-direction: column;
-      padding-left: 0;
-      position: relative;
-    }
-
-    /* Vertical tree structure */
-    .tree-node-row {
-      display: flex;
-      flex-direction: row;
-      align-items: flex-start;
-      padding: 4px 0;
-    }
-
-    /* The vertical+horizontal connector lines */
-    .connector-col {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 32px;
+      padding: 1px 6px;
+      border-radius: 4px;
       flex-shrink: 0;
-      position: relative;
-    }
-    .conn-v { width: 1.5px; background: var(--line); flex: 1; min-height: 10px; }
-    .conn-h { height: 1.5px; background: var(--line); width: 32px; flex-shrink: 0; }
-
-    /* Children container */
-    .children {
-      display: flex;
-      flex-direction: column;
-      padding-left: 32px;
-      border-left: 1.5px solid var(--line);
-      margin-left: 16px;
     }
 
-    .child-row {
-      display: flex;
-      flex-direction: row;
-      align-items: flex-start;
-      padding: 5px 0;
-      position: relative;
-    }
-    .child-row::before {
-      content: '';
-      position: absolute;
-      left: -32px;
-      top: 50%;
-      width: 32px;
-      height: 1.5px;
-      background: var(--line);
-      transform: translateY(-50%);
-    }
+    /* Level colors */
+    .node-unit   { background: #1D9E75; color: #fff; border-color: #0F6E56; }
+    .node-unit .node-row2 { opacity: 0.8; }
+    .node-unit .peg-tag { background: rgba(255,255,255,0.2); color: #fff; }
 
-    /* Section divider between atasan groups */
-    .atasan-group { margin-bottom: 1.25rem; }
-    .atasan-group:last-child { margin-bottom: 0; }
+    .node-kantor { background: #E6F1FB; color: #0C447C; border-color: #B5D4F4; }
+    .node-kantor .node-row2 { opacity: 0.8; }
+    .node-kantor .peg-tag { background: #B5D4F4; color: #0C447C; }
 
-    /* Pegawai grid under atasan */
-    .pegawai-list {
-      display: flex;
-      flex-direction: column;
-      border-left: 1.5px solid var(--line);
-      margin-left: 16px;
-      padding-left: 0;
-    }
-    .pegawai-item {
+    .node-ou     { background: #FAEEDA; color: #633806; border-color: #FAC775; }
+    .node-ou .node-row2 { opacity: 0.8; }
+    .node-ou .peg-tag { background: #FAC775; color: #633806; }
+
+    .node-atasan { background: #E1F5EE; color: #085041; border-color: #9FE1CB; }
+    .node-atasan .node-row2 { opacity: 0.85; }
+    .node-atasan .peg-tag { background: #9FE1CB; color: #085041; }
+
+    .node-pegawai { background: #ffffff; color: #1a1917; border-color: #d0cdc7; }
+    .node-pegawai .node-row2 { color: var(--text-sec); }
+    .node-pegawai .peg-tag { background: #F1EFE8; color: #444441; }
+
+    /* ── LAYOUT ── */
+
+    /* Row 1: Unit ── Kantor (horizontal) */
+    .level-top {
       display: flex;
       flex-direction: row;
       align-items: center;
-      padding: 5px 0;
+      gap: 0;
+      margin-bottom: 0;
+    }
+    .h-line { width: 36px; height: 1.5px; background: var(--line); flex-shrink: 0; }
+
+    /* Below kantor: vertical tree */
+    .v-children {
+      display: flex;
+      flex-direction: column;
+      border-left: 1.5px solid var(--line);
+      margin-left: 18px;
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+    .v-child {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      padding: 6px 0;
       position: relative;
     }
-    .pegawai-item::before {
+    .v-child::before {
       content: '';
       position: absolute;
-      left: -32px;
+      left: 0;
       top: 50%;
       width: 32px;
       height: 1.5px;
       background: var(--line);
       transform: translateY(-50%);
     }
-    .peg-spacer { width: 32px; flex-shrink: 0; }
+    .v-child-indent { padding-left: 32px; display: flex; flex-direction: row; align-items: flex-start; }
+    .v-child-col { display: flex; flex-direction: column; }
 
-    /* Empty/loading */
+    /* Wrapper for unit+kantor + everything below kantor */
+    .kantor-block {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Org unit block */
+    .ou-block { display: flex; flex-direction: column; }
+
+    /* Atasan block */
+    .atasan-block { display: flex; flex-direction: column; }
+
+    /* State messages */
     .state-msg {
       text-align: center;
       padding: 4rem 2rem;
@@ -236,7 +201,7 @@
     <div class="legend-item"><div class="legend-dot" style="background:#B5D4F4"></div> Kantor Induk/UP</div>
     <div class="legend-item"><div class="legend-dot" style="background:#FAC775"></div> Organizational Unit</div>
     <div class="legend-item"><div class="legend-dot" style="background:#9FE1CB"></div> Atasan</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#e0ddd8;border:0.5px solid #ccc"></div> Pegawai</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#d0cdc7"></div> Pegawai</div>
   </div>
 
   <div class="tree-wrap">
@@ -247,7 +212,6 @@
 
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdx_0oA1EIY2PpzNcf1EYbjJ6XhNRGbHff86rr1DFZsJhP_xUrE3XaATeCMHhkvR4lPngfpdiw04cV/pub?output=csv";
-
 let allData = [];
 
 function parseCSV(text) {
@@ -278,15 +242,9 @@ function findCol(row, ...kws) {
 }
 
 function mapRow(r) {
-  // Kolom G = Organizational Unit (index 6, 0-based)
-  const vals = Object.values(r);
   const keys = Object.keys(r);
-  // Find org unit by column header or position
-  let orgUnit = '';
-  const ouKey = keys.find(k => k.toLowerCase().includes('organizational') || k.toLowerCase().includes('org unit'));
-  if (ouKey) orgUnit = r[ouKey] || '';
-  else if (vals[6] !== undefined) orgUnit = vals[6] || '';
-
+  const ouKey = keys.find(k => k.toLowerCase().includes('organizational') || k.toLowerCase() === 'org unit');
+  const orgUnit = ouKey ? r[ouKey] || '' : (Object.values(r)[6] || '');
   return {
     jabatan: findCol(r, 'position', 'jabatan'),
     nama:    findCol(r, 'full name', 'nama', 'name'),
@@ -299,15 +257,21 @@ function mapRow(r) {
   };
 }
 
-function esc(s) {
-  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function tr(s, n) {
-  s = s||''; return s.length > n ? s.slice(0,n)+'…' : s;
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function tr(s, n) { s=s||'—'; return s.length>n ? s.slice(0,n)+'…':s; }
+function uniq(arr) { return [...new Set(arr.filter(Boolean))].sort(); }
+
+function pegTag(peg, cls) {
+  if (!peg) return '';
+  return `<span class="peg-tag ${cls}">PeG ${esc(peg)}</span>`;
 }
 
-function uniqueSorted(arr) {
-  return [...new Set(arr.filter(Boolean))].sort();
+function nodeHtml(cls, row1, row2, peg, pegCls, title) {
+  return `
+    <div class="node ${cls}" title="${esc(title||row1)}">
+      <div class="node-row1">${esc(tr(row1, 24))}</div>
+      <div class="node-row2">${esc(tr(row2, 22))} ${pegTag(peg, pegCls)}</div>
+    </div>`;
 }
 
 function buildTree(unit, kantor) {
@@ -316,139 +280,109 @@ function buildTree(unit, kantor) {
   );
   if (!rows.length) return '<div class="state-msg">Tidak ada data untuk pilihan ini.</div>';
 
-  // Group: orgUnit → atasan → pegawai[]
-  const orgMap = {};
-  rows.forEach(d => {
-    const ou  = d.orgUnit || '(Org Unit tidak diketahui)';
-    const at  = d.atasan  || '(Atasan tidak diketahui)';
-    if (!orgMap[ou]) orgMap[ou] = {};
-    if (!orgMap[ou][at]) orgMap[ou][at] = { jabatanAtasan: '', pegawai: [] };
-    orgMap[ou][at].pegawai.push(d);
-  });
-
-  const unitPegCount = rows.length;
-  let html = '<div class="tree" style="display:inline-block;min-width:100%">';
-
-  // Level 1: Unit Layanan
-  html += `
-    <div style="display:flex;flex-direction:row;align-items:flex-start;padding:4px 0">
-      <div class="node node-1" title="${esc(unit)}">
-        ${esc(tr(unit,26))}
-        <div class="node-sub">${unitPegCount} pegawai</div>
-      </div>
-    </div>
-  `;
-
-  // Level 2: Kantor
   const kantorList = kantor === '__all__'
-    ? uniqueSorted(rows.map(d => d.lokasi))
+    ? uniq(rows.map(d => d.lokasi))
     : [kantor];
 
-  html += `<div class="children">`;
-  kantorList.forEach(lok => {
+  // Unit node + kantor horizontal
+  let html = `<div style="display:inline-block;min-width:max-content">`;
+
+  kantorList.forEach((lok, ki) => {
     const lokRows = rows.filter(d => d.lokasi === lok);
-    html += `<div class="child-row">`;
-    html += `<div style="display:flex;flex-direction:column">`;
-    html += `
-      <div class="node node-2" title="${esc(lok)}">
-        ${esc(tr(lok,24))}
-        <div class="node-sub">${lokRows.length} pegawai</div>
-      </div>
-    `;
 
-    // Level 3: Org Unit
-    const ouMap = {};
-    lokRows.forEach(d => {
-      const ou = d.orgUnit || '(Org Unit tidak diketahui)';
-      if (!ouMap[ou]) ouMap[ou] = {};
-      const at = d.atasan || '(Atasan tidak diketahui)';
-      if (!ouMap[ou][at]) ouMap[ou][at] = [];
-      ouMap[ou][at].push(d);
-    });
+    // Unit + Kantor sejajar horizontal
+    html += `<div style="display:flex;flex-direction:column;margin-bottom:${ki < kantorList.length-1 ? '2.5rem':'0'}">`;
+    html += `<div class="level-top">`;
+    // Unit node hanya di baris pertama kantor
+    if (ki === 0) {
+      html += nodeHtml('node-unit', unit, `${rows.length} pegawai`, '', '', unit);
+      html += `<div class="h-line"></div>`;
+    } else {
+      // Spacer same width as unit node + hline
+      html += `<div style="width:calc(140px + 36px)"></div>`;
+    }
+    html += nodeHtml('node-kantor', lok, `${lokRows.length} pegawai`, '', '', lok);
+    html += `</div>`; // level-top
 
-    const ouList = uniqueSorted(Object.keys(ouMap));
-    html += `<div class="children">`;
+    // Org Unit list — vertical dari kantor
+    const ouList = uniq(lokRows.map(d => d.orgUnit));
+    html += `<div style="margin-left:calc(140px + 36px)">`;
+    html += `<div class="v-children">`;
+
     ouList.forEach(ou => {
-      const ouRows = lokRows.filter(d => (d.orgUnit||'(Org Unit tidak diketahui)') === ou);
-      html += `<div class="child-row">`;
-      html += `<div style="display:flex;flex-direction:column">`;
-      html += `
-        <div class="node node-3" title="${esc(ou)}">
-          ${esc(tr(ou,24))}
-          <div class="node-sub">${ouRows.length} pegawai</div>
-        </div>
-      `;
+      const ouRows = lokRows.filter(d => (d.orgUnit||'') === ou);
+      html += `<div class="v-child">`;
+      html += `<div class="v-child-indent">`;
+      html += `<div class="v-child-col">`;
+      html += nodeHtml('node-ou', ou, `${ouRows.length} pegawai`, '', '', ou);
 
-      // Level 4: Atasan
-      const atasanMap = ouMap[ou];
-      const atasanList = uniqueSorted(Object.keys(atasanMap));
-      html += `<div class="children">`;
+      // Atasan list — vertical dari org unit
+      const atasanList = uniq(ouRows.map(d => d.atasan));
+      html += `<div class="v-children">`;
+
       atasanList.forEach(at => {
-        const pegList = atasanMap[at];
-        // Cari jabatan atasan dari data (nama atasan cocok dengan nama pegawai lain)
-        const atasanData = allData.find(d => d.nama === at);
-        const jabatanAtasan = atasanData ? atasanData.jabatan : '';
+        const atRows = ouRows.filter(d => d.atasan === at);
+        // Cari jabatan & PeG atasan dari data
+        const atData = allData.find(d => d.nama === at);
+        const atJab  = atData ? atData.jabatan : '';
+        const atPeg  = atData ? atData.peg : '';
 
-        html += `<div class="child-row atasan-group">`;
-        html += `<div style="display:flex;flex-direction:column">`;
+        html += `<div class="v-child">`;
+        html += `<div class="v-child-indent">`;
+        html += `<div class="v-child-col">`;
+
+        // Atasan node: baris 1 = Jabatan, baris 2 = Nama · PeG
         html += `
-          <div class="node node-4" title="${esc(at)}">
-            ${esc(tr(at,24))}
-            ${jabatanAtasan ? `<div class="node-sub">${esc(tr(jabatanAtasan,26))}</div>` : ''}
-          </div>
-        `;
+          <div class="node node-atasan" title="${esc(at)}">
+            <div class="node-row1">${esc(tr(atJab||'(Jabatan)', 24))}</div>
+            <div class="node-row2">${esc(tr(at, 22))} ${pegTag(atPeg, 'node-atasan')}</div>
+          </div>`;
 
-        // Level 5: Pegawai
-        html += `<div class="pegawai-list">`;
-        pegList.forEach(peg => {
+        // Pegawai list — vertical dari atasan
+        html += `<div class="v-children">`;
+        atRows.forEach(peg => {
+          html += `<div class="v-child">`;
+          html += `<div class="v-child-indent">`;
+          // Pegawai node: baris 1 = Jabatan, baris 2 = Nama · PeG
           html += `
-            <div class="pegawai-item">
-              <div class="peg-spacer"></div>
-              <div class="node node-5" title="${esc(peg.nama)}">
-                <div style="display:flex;align-items:baseline;gap:0">
-                  <span class="node-peg-name">${esc(tr(peg.nama,22))}</span>
-                  ${peg.peg ? `<span class="node-peg-peg">PeG ${esc(peg.peg)}</span>` : ''}
-                </div>
-                <div class="node-peg-jab">${esc(tr(peg.jabatan,28))}</div>
-              </div>
-            </div>
-          `;
+            <div class="node node-pegawai" title="${esc(peg.nama)}">
+              <div class="node-row1">${esc(tr(peg.jabatan||'(Jabatan)', 24))}</div>
+              <div class="node-row2">${esc(tr(peg.nama, 22))} ${pegTag(peg.peg, 'node-pegawai')}</div>
+            </div>`;
+          html += `</div></div>`; // v-child-indent + v-child
         });
-        html += `</div>`; // pegawai-list
+        html += `</div>`; // v-children pegawai
 
-        html += `</div></div>`; // atasan col + child-row
+        html += `</div></div></div>`; // v-child-col + v-child-indent + v-child
       });
-      html += `</div>`; // children atasan
+      html += `</div>`; // v-children atasan
 
-      html += `</div></div>`; // ou col + child-row
+      html += `</div></div></div>`; // v-child-col + v-child-indent + v-child
     });
-    html += `</div>`; // children ou
 
-    html += `</div></div>`; // lok col + child-row
+    html += `</div></div>`; // v-children ou + margin wrapper
+    html += `</div>`; // kantor block
   });
-  html += `</div>`; // children kantor
 
-  html += `</div>`; // tree
+  html += `</div>`;
   return html;
 }
 
 function render() {
   const unit   = document.getElementById('f-unit').value;
   const kantor = document.getElementById('f-kantor').value;
-  const container = document.getElementById('tree-container');
-  const badge = document.getElementById('count-badge');
+  const cont   = document.getElementById('tree-container');
+  const badge  = document.getElementById('count-badge');
 
   if (!unit) {
-    container.className = 'state-msg';
-    container.innerHTML = 'Pilih Unit Layanan dan Kantor Induk/UP untuk menampilkan struktur organisasi.';
-    badge.style.display = 'none';
-    return;
+    cont.className = 'state-msg';
+    cont.innerHTML = 'Pilih Unit Layanan dan Kantor Induk/UP untuk menampilkan struktur organisasi.';
+    badge.style.display = 'none'; return;
   }
   if (!kantor) {
-    container.className = 'state-msg';
-    container.innerHTML = 'Pilih Kantor Induk/UP untuk menampilkan struktur organisasi.';
-    badge.style.display = 'none';
-    return;
+    cont.className = 'state-msg';
+    cont.innerHTML = 'Pilih Kantor Induk/UP untuk menampilkan struktur organisasi.';
+    badge.style.display = 'none'; return;
   }
 
   const rows = allData.filter(d =>
@@ -456,22 +390,17 @@ function render() {
   );
   badge.textContent = `${rows.length} pegawai`;
   badge.style.display = 'inline-block';
-
-  container.className = '';
-  container.innerHTML = buildTree(unit, kantor);
+  cont.className = '';
+  cont.innerHTML = buildTree(unit, kantor);
 }
 
-function updateKantorFilter(unit) {
+function updateKantor(unit) {
   const sel = document.getElementById('f-kantor');
-  if (!unit) {
-    sel.innerHTML = '<option value="">— Pilih Kantor Induk/UP —</option>';
-    sel.disabled = true;
-    return;
-  }
-  const kantors = uniqueSorted(allData.filter(d => d.unit === unit).map(d => d.lokasi));
+  if (!unit) { sel.innerHTML = '<option value="">— Pilih Kantor Induk/UP —</option>'; sel.disabled = true; return; }
+  const list = uniq(allData.filter(d => d.unit === unit).map(d => d.lokasi));
   sel.innerHTML = '<option value="">— Pilih Kantor Induk/UP —</option>' +
-    (kantors.length > 1 ? `<option value="__all__">Semua Kantor (${kantors.length})</option>` : '') +
-    kantors.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
+    (list.length > 1 ? `<option value="__all__">Semua Kantor (${list.length})</option>` : '') +
+    list.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
   sel.disabled = false;
 }
 
@@ -480,19 +409,18 @@ async function loadData() {
     const resp = await fetch(CSV_URL);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const text = await resp.text();
-    const raw  = parseCSV(text);
-    allData    = raw.map(mapRow).filter(d => d.nama || d.jabatan);
+    allData = parseCSV(text).map(mapRow).filter(d => d.nama || d.jabatan);
 
     document.getElementById('subtitle').textContent =
       `${allData.length} pegawai · Data real-time dari Google Sheets`;
 
-    const units = uniqueSorted(allData.map(d => d.unit));
+    const units = uniq(allData.map(d => d.unit));
     const selU  = document.getElementById('f-unit');
     selU.innerHTML = '<option value="">— Pilih Unit Layanan —</option>' +
       units.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
 
     selU.addEventListener('change', () => {
-      updateKantorFilter(selU.value);
+      updateKantor(selU.value);
       document.getElementById('f-kantor').value = '';
       render();
     });
