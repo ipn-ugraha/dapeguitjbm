@@ -276,13 +276,13 @@
         <thead>
           <tr>
             <th style="width:36px">#</th>
+            <th data-col="unit">Unit</th>
+            <th data-col="lokasi">Lokasi</th>
+            <th data-col="atasan">Atasan</th>
             <th data-col="jabatan">Jabatan</th>
             <th data-col="nama">Nama</th>
             <th data-col="nip">NIP</th>
             <th data-col="peg" style="width:50px">PeG</th>
-            <th data-col="unit">Unit</th>
-            <th data-col="lokasi">Lokasi</th>
-            <th data-col="atasan">Atasan</th>
           </tr>
         </thead>
         <tbody id="tbl-body">
@@ -429,13 +429,13 @@ function renderTable() {
   tbody.innerHTML = rows.map((d, i) => `
     <tr>
       <td style="color:var(--text-hint);font-family:'DM Mono',monospace">${start + i + 1}</td>
+      <td title="${d.unit}">${d.unit || '—'}</td>
+      <td title="${d.lokasi}">${d.lokasi || '—'}</td>
+      <td class="atasan-sec" title="${d.atasan}">${d.atasan || '—'}</td>
       <td><span class="pill ${pillClass(d.jabatan)}" title="${d.jabatan}">${d.jabatan || '—'}</span></td>
       <td class="name-strong" title="${d.nama}">${d.nama || '—'}</td>
       <td class="nip-mono">${d.nip || '—'}</td>
       <td style="text-align:center;color:var(--text-sec)">${d.peg || '—'}</td>
-      <td title="${d.unit}">${d.unit || '—'}</td>
-      <td title="${d.lokasi}">${d.lokasi || '—'}</td>
-      <td class="atasan-sec" title="${d.atasan}">${d.atasan || '—'}</td>
     </tr>
   `).join('');
 
