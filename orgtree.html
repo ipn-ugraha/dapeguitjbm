@@ -298,45 +298,47 @@ function buildTree(unit, kantor) {
       html += `<div class="v-item">`;
       html += `<div class="v-item-body">`;
 
-      // Org Unit ──── Atasan (sejajar horizontal)
-      // Group atasan under this ou
-      const atasanList = uniq(ouRows.map(d => d.atasan));
+      // Deduplikasi atasan: kumpulkan semua pegawai per atasan (1 atasan = 1 kali muncul)
+      const atasanMap = {};
+      ouRows.forEach(peg => {
+        const at = peg.atasan || '(Tanpa Atasan)';
+        if (!atasanMap[at]) atasanMap[at] = [];
+        atasanMap[at].push(peg);
+      });
+      const atasanList = Object.keys(atasanMap).sort();
 
-      // Org Unit node
+      // Org Unit node sejajar atasan
       html += `<div style="display:flex;flex-direction:row;align-items:flex-start">`;
       html += nodeEl('n-ou', ou, `${ouRows.length} pegawai`, '', ou);
       html += `<div class="h-line" style="margin-top:22px"></div>`;
 
-      // Atasan column (vertical list sejajar ou)
+      // Atasan column — satu atasan hanya muncul sekali
       html += `<div style="display:flex;flex-direction:column;gap:0">`;
 
-      atasanList.forEach((at, ai) => {
-        const atRows = ouRows.filter(d => d.atasan === at);
+      atasanList.forEach((at) => {
+        const atRows = atasanMap[at];
         const atData = allData.find(d => d.nama === at);
         const atJab  = atData ? atData.jabatan : '';
         const atPeg  = atData ? atData.peg : '';
 
         html += `<div class="atasan-group">`;
 
-        // Atasan node: baris1=Jabatan, baris2=Nama·PeG
-        html += `<div class="h-pair" style="align-items:flex-start">`;
+        // Atasan node: baris1=Jabatan Atasan, baris2=Nama Atasan · PeG
         html += `<div class="node n-atasan" title="${esc(at)}">
           <div class="node-row1">${esc(tr(atJab||'(Jabatan)',26))}</div>
           <div class="node-row2">${esc(tr(at,24))}${pegTag(atPeg)}</div>
         </div>`;
-        html += `</div>`;
 
-        // Pegawai — vertical dari atasan
+        // Pegawai di bawah atasan
         html += `<div class="v-block">`;
         atRows.forEach(peg => {
           html += `<div class="v-item">`;
           html += `<div class="v-item-body">`;
-          // Pegawai node: baris1=Jabatan, baris2=Nama·PeG
           html += `<div class="node n-pegawai" title="${esc(peg.nama)}">
             <div class="node-row1">${esc(tr(peg.jabatan||'(Jabatan)',26))}</div>
             <div class="node-row2">${esc(tr(peg.nama,24))}${pegTag(peg.peg)}</div>
           </div>`;
-          html += `</div></div>`; // v-item-body + v-item
+          html += `</div></div>`;
         });
         html += `</div>`; // v-block pegawai
 
