@@ -38,12 +38,27 @@
     .btn-reset { font-family: "DM Sans", sans-serif; font-size: 12px; color: var(--text-sec); background: transparent; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); padding: 7px 14px; cursor: pointer; white-space: nowrap; }
     .btn-reset:hover { background: var(--surface2); }
 
+    /* Cascade filters */
+    .filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; width: 100%; }
+    .filter-row select { font-family: "DM Sans", sans-serif; font-size: 13px; color: var(--text); background: var(--bg); border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); padding: 7px 12px; outline: none; flex: 1; min-width: 160px; }
+    .filter-row select:focus { border-color: var(--accent); background: var(--surface); }
+    .filter-row select:disabled { opacity: 0.45; cursor: default; }
+    .filter-divider { width: 100%; height: 0.5px; background: var(--border); margin: 4px 0; }
+
     /* Jenjang pills */
     .jenjang-tags { display: flex; flex-wrap: wrap; gap: 6px; }
     .j-tag { font-size: 12px; padding: 5px 14px; border-radius: 99px; border: 0.5px solid var(--border-md); background: var(--surface); color: var(--text-sec); cursor: pointer; font-family: "DM Sans", sans-serif; }
     .j-tag:hover { background: var(--surface2); }
     .j-tag.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 500; }
     .j-tag-all { background: var(--surface2); }
+
+    /* Level row colors */
+    .row-main td   { background: #EAF3DE !important; }
+    .row-lv2 td    { background: #E6F1FB !important; }
+    .row-lv3 td    { background: #FAEEDA !important; }
+    .row-main:hover td { background: #d5e8c4 !important; }
+    .row-lv2:hover td  { background: #cde3f5 !important; }
+    .row-lv3:hover td  { background: #f5dfc0 !important; }
 
     /* Table */
     .tbl-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
@@ -105,6 +120,11 @@
   </div>
 
   <div class="controls">
+    <div class="filter-row">
+      <select id="f-unit"><option value="">Semua Unit Layanan</option></select>
+      <select id="f-lokasi" disabled><option value="">— Pilih Unit dulu —</option></select>
+    </div>
+    <div class="filter-divider"></div>
     <div class="jenjang-tags" id="jenjang-tags">
       <button class="j-tag j-tag-all active" data-val="">Semua Jenjang</button>
     </div>
@@ -199,9 +219,21 @@ function pillClass(j) {
   return "pill-gray";
 }
 
+function updateLokasiFilter(unit) {
+  const sel = document.getElementById("f-lokasi");
+  if (!unit) { sel.innerHTML = "<option value=\"\">— Pilih Unit dulu —</option>"; sel.disabled = true; return; }
+  const list = [...new Set(allData.filter(d => d.unit === unit).map(d => d.lokasi).filter(Boolean))].sort();
+  sel.innerHTML = "<option value=\"\">Semua Lokasi</option>" + list.map(l => `<option value="${l}">${l}</option>`).join("");
+  sel.disabled = false;
+}
+
 function applyFilters() {
+  const unit   = document.getElementById("f-unit").value;
+  const lokasi = document.getElementById("f-lokasi").value;
   const search = document.getElementById("search").value.toLowerCase().trim();
   filtered = allData.filter(d => {
+    if (unit   && d.unit   !== unit)   return false;
+    if (lokasi && d.lokasi !== lokasi) return false;
     if (activeJenjang && d.jenjang !== activeJenjang) return false;
     if (search) {
       const hay = [d.jabatan, d.nama, d.nip, d.unit, d.lokasi, d.atasan, d.jenjang].join(" ").toLowerCase();
@@ -228,20 +260,21 @@ function renderBawahanRows(pegawai, level, parentIsLast) {
     const prefix = isLast ? "└" : "├";
     const paddingLeft = 14 + (level * 18);
 
-    html += `<tr class="row-bawahan">
+    const lvClass = level === 1 ? "row-lv2" : "row-lv3";
+    html += `<tr class="${lvClass}">
       <td></td>
-      <td title="${b.unit}" style="color:var(--text-hint);font-size:12px">${b.unit||"—"}</td>
-      <td title="${b.lokasi}" style="color:var(--text-hint);font-size:12px">${b.lokasi||"—"}</td>
+      <td title="${b.unit}" style="font-size:12px">${b.unit||"—"}</td>
+      <td title="${b.lokasi}" style="font-size:12px">${b.lokasi||"—"}</td>
       <td></td>
       <td><span class="pill pill-bawahan" title="${b.jabatan}">${b.jabatan||"—"}</span></td>
       <td>
         <div class="bawahan-indent" style="padding-left:${paddingLeft}px">
           <span class="bawahan-icon">${prefix}</span>
-          <span style="color:${level===1?'var(--text-sec)':'var(--text-hint)'};font-size:${level===1?'13':'12'}px">${b.nama||"—"}</span>
+          <span style="font-size:${level===1?'13':'12'}px">${b.nama||"—"}</span>
         </div>
       </td>
       <td class="nip-mono" style="font-size:11px">${b.nip||"—"}</td>
-      <td style="text-align:center;color:var(--text-hint);font-size:11px">${b.peg||"—"}</td>
+      <td style="text-align:center;font-size:11px">${b.peg||"—"}</td>
     </tr>`;
 
     // Level 3: bawahan dari bawahan (rekursif sampai level 3)
@@ -327,6 +360,11 @@ async function loadData() {
     allData  = parseCSV(text).map(mapRow).filter(d => d.nama || d.jabatan);
     filtered = [...allData];
     document.getElementById("subtitle").textContent = `${allData.length} pegawai · Data real-time dari Google Sheets`;
+    const unitList = [...new Set(allData.map(d => d.unit).filter(Boolean))].sort();
+    const selU = document.getElementById("f-unit");
+    selU.innerHTML = "<option value=\"\">Semua Unit Layanan</option>" +
+      unitList.map(u => `<option value="${u}">${u}</option>`).join("");
+
     const jenjangList = [...new Set(allData.map(d => d.jenjang).filter(Boolean))].sort();
     buildJenjangTags(jenjangList);
     renderStats();
@@ -339,9 +377,19 @@ async function loadData() {
   }
 }
 
+document.getElementById("f-unit").addEventListener("change", () => {
+  updateLokasiFilter(document.getElementById("f-unit").value);
+  document.getElementById("f-lokasi").value = "";
+  applyFilters();
+});
+document.getElementById("f-lokasi").addEventListener("change", applyFilters);
 document.getElementById("search").addEventListener("input", applyFilters);
 document.getElementById("btn-reset").addEventListener("click", () => {
   activeJenjang = "";
+  document.getElementById("f-unit").value = "";
+  document.getElementById("f-lokasi").value = "";
+  document.getElementById("f-lokasi").disabled = true;
+  document.getElementById("f-lokasi").innerHTML = "<option value=\"\">— Pilih Unit dulu —</option>";
   document.querySelectorAll(".j-tag").forEach(b => b.classList.remove("active"));
   document.querySelector(".j-tag-all").classList.add("active");
   document.getElementById("search").value = "";
