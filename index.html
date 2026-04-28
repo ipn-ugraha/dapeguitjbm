@@ -265,8 +265,8 @@
 
   <div class="controls">
     <input type="text" id="search" placeholder="Cari nama, NIP, jabatan..." />
-    <select id="f-jenjang"><option value="">Semua Jenjang (Main)</option></select>
-    <select id="f-jabatan"><option value="">Semua Jenis Jabatan</option></select>
+    <select id="f-ultg"><option value="">Semua ULTG</option></select>
+    <select id="f-poscontent"><option value="">Semua Posisi</option></select>
     <select id="f-atasan"><option value="">Semua Nama Atasan</option></select>
     <button class="btn-reset" id="btn-reset">Reset filter</button>
   </div>
@@ -337,8 +337,15 @@ function findCol(row, ...kws) {
 }
 
 function mapRow(r) {
+  const jabatan = findCol(r, 'position', 'jabatan', 'job title');
+  // Ekstrak nama ULTG dari position yang diawali "MUL ULTG"
+  const ultgMatch = jabatan.match(/^MUL ULTG\s+(.+?)(?:\s*\(|$)/i);
+  const ultg = ultgMatch ? ('MUL ULTG ' + ultgMatch[1].trim()) : '';
+  // Ekstrak konten dalam kurung dari position
+  const parenMatch = jabatan.match(/\(([^)]+)\)/);
+  const posContent = parenMatch ? parenMatch[1].trim() : '';
   return {
-    jabatan: findCol(r, 'position', 'jabatan', 'job title'),
+    jabatan: jabatan,
     nama:    findCol(r, 'full name', 'nama', 'name'),
     nip:     findCol(r, 'prev.per', 'nip', 'pers.no', 'employee no'),
     peg:     findCol(r, 'peg'),
@@ -346,6 +353,8 @@ function mapRow(r) {
     lokasi:  findCol(r, 'kantor induk', 'kantor', 'lokasi', 'up'),
     atasan:  findCol(r, 'nama atasan', 'atasan', 'supervisor', 'manager'),
     jenjang: findCol(r, 'jenjang', 'main', 'grade', 'level'),
+    ultg:    ultg,
+    posContent: posContent,
   };
 }
 
@@ -368,15 +377,15 @@ function pillClass(jabatan) {
 }
 
 function applyFilters() {
-  const jenjang = document.getElementById('f-jenjang').value;
-  const jabatan = document.getElementById('f-jabatan').value;
-  const atasan  = document.getElementById('f-atasan').value;
-  const search  = document.getElementById('search').value.toLowerCase().trim();
+  const ultg       = document.getElementById('f-ultg').value;
+  const posContent = document.getElementById('f-poscontent').value;
+  const atasan     = document.getElementById('f-atasan').value;
+  const search     = document.getElementById('search').value.toLowerCase().trim();
 
   filtered = allData.filter(d => {
-    if (jenjang && d.jenjang !== jenjang) return false;
-    if (jabatan && d.jabatan !== jabatan) return false;
-    if (atasan  && d.atasan  !== atasan)  return false;
+    if (ultg       && d.ultg       !== ultg)       return false;
+    if (posContent && d.posContent !== posContent)  return false;
+    if (atasan     && d.atasan     !== atasan)      return false;
     if (search) {
       const hay = [d.jabatan, d.nama, d.nip, d.unit, d.lokasi, d.atasan].join(' ').toLowerCase();
       if (!hay.includes(search)) return false;
@@ -479,8 +488,12 @@ async function loadData() {
     document.getElementById('subtitle').textContent =
       `${allData.length} pegawai · Data real-time dari Google Sheets`;
 
-    populateSelect('f-jenjang', uniqueSorted('jenjang'), 'Semua Jenjang (Main)');
-    populateSelect('f-jabatan', uniqueSorted('jabatan'), 'Semua Jenis Jabatan');
+    // ULTG: hanya position yang diawali "MUL ULTG"
+    const ultgList = [...new Set(allData.map(d => d.ultg).filter(Boolean))].sort();
+    populateSelect('f-ultg', ultgList, 'Semua ULTG');
+    // Posisi: konten dalam kurung dari position
+    const posContentList = [...new Set(allData.map(d => d.posContent).filter(Boolean))].sort();
+    populateSelect('f-poscontent', posContentList, 'Semua Posisi');
     populateSelect('f-atasan',  uniqueSorted('atasan'),  'Semua Nama Atasan');
 
     renderStats();
@@ -494,12 +507,12 @@ async function loadData() {
   }
 }
 
-document.getElementById('f-jenjang').addEventListener('change', applyFilters);
-document.getElementById('f-jabatan').addEventListener('change', applyFilters);
+document.getElementById('f-ultg').addEventListener('change', applyFilters);
+document.getElementById('f-poscontent').addEventListener('change', applyFilters);
 document.getElementById('f-atasan').addEventListener('change',  applyFilters);
 document.getElementById('search').addEventListener('input', applyFilters);
 document.getElementById('btn-reset').addEventListener('click', () => {
-  ['f-jenjang', 'f-jabatan', 'f-atasan'].forEach(id => document.getElementById(id).value = '');
+  ['f-ultg', 'f-poscontent', 'f-atasan'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('search').value = '';
   applyFilters();
 });
