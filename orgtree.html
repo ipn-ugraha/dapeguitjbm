@@ -18,8 +18,10 @@
       --text-sec: #6b6a66;
       --text-hint: #a09e9a;
       --line: #ccc9c2;
-      --radius: 10px;
       --radius-sm: 7px;
+      --node-min: 148px;
+      --node-max: 220px;
+      --gap-h: 36px; /* horizontal line width */
     }
 
     body {
@@ -30,150 +32,127 @@
       font-size: 14px;
     }
 
-    .page { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+    .page { max-width: 1500px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
 
+    /* Header */
     .page-header { margin-bottom: 1.75rem; }
     .page-title { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
     .page-sub { font-size: 13px; color: var(--text-sec); margin-top: 3px; }
 
     /* Controls */
-    .controls {
-      display: flex; align-items: center; gap: 10px;
-      margin-bottom: 1.5rem; flex-wrap: wrap;
-    }
+    .controls { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
     .controls select {
       font-family: 'DM Sans', sans-serif;
       font-size: 13px; font-weight: 500;
-      color: var(--text);
-      background: var(--surface);
+      color: var(--text); background: var(--surface);
       border: 0.5px solid var(--border-md);
       border-radius: var(--radius-sm);
-      padding: 8px 14px;
-      outline: none; cursor: pointer;
-      min-width: 200px;
+      padding: 8px 14px; outline: none; cursor: pointer; min-width: 200px;
     }
     .controls select:focus { border-color: #1D9E75; }
     .controls select:disabled { opacity: 0.45; cursor: default; }
     .arrow-sep { color: var(--text-hint); font-size: 18px; font-weight: 300; }
     .count-badge {
       font-size: 12px; color: var(--text-sec);
-      background: var(--surface2);
-      border-radius: 99px; padding: 4px 12px;
-      border: 0.5px solid var(--border);
+      background: var(--surface2); border-radius: 99px;
+      padding: 4px 12px; border: 0.5px solid var(--border);
     }
 
     /* Legend */
-    .legend {
-      display: flex; gap: 14px; flex-wrap: wrap;
-      margin-bottom: 1.75rem; align-items: center;
-    }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 1.75rem; align-items: center; }
     .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-sec); }
     .legend-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
 
     /* Tree scroll */
     .tree-wrap { overflow-x: auto; overflow-y: visible; padding-bottom: 2rem; }
 
-    /* Node base */
+    /* Node */
     .node {
       border-radius: var(--radius-sm);
       padding: 9px 14px;
       border: 0.5px solid var(--border-md);
-      min-width: 140px;
-      max-width: 220px;
+      min-width: var(--node-min);
+      max-width: var(--node-max);
       display: inline-block;
-      vertical-align: top;
+      flex-shrink: 0;
     }
     .node-row1 { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .node-row2 { font-size: 12px; font-weight: 400; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+    .node-row2 { font-size: 12px; font-weight: 400; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; }
     .peg-tag {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      padding: 1px 6px;
-      border-radius: 4px;
-      flex-shrink: 0;
+      font-family: 'DM Mono', monospace; font-size: 11px;
+      padding: 1px 6px; border-radius: 4px; flex-shrink: 0;
     }
 
     /* Level colors */
-    .node-unit   { background: #1D9E75; color: #fff; border-color: #0F6E56; }
-    .node-unit .node-row2 { opacity: 0.8; }
-    .node-unit .peg-tag { background: rgba(255,255,255,0.2); color: #fff; }
+    .n-unit    { background: #1D9E75; color: #fff; border-color: #0F6E56; }
+    .n-unit    .node-row2 { opacity: 0.8; }
+    .n-unit    .peg-tag { background: rgba(255,255,255,0.2); color: #fff; }
 
-    .node-kantor { background: #E6F1FB; color: #0C447C; border-color: #B5D4F4; }
-    .node-kantor .node-row2 { opacity: 0.8; }
-    .node-kantor .peg-tag { background: #B5D4F4; color: #0C447C; }
+    .n-kantor  { background: #E6F1FB; color: #0C447C; border-color: #B5D4F4; }
+    .n-kantor  .node-row2 { opacity: 0.85; }
+    .n-kantor  .peg-tag { background: #B5D4F4; color: #0C447C; }
 
-    .node-ou     { background: #FAEEDA; color: #633806; border-color: #FAC775; }
-    .node-ou .node-row2 { opacity: 0.8; }
-    .node-ou .peg-tag { background: #FAC775; color: #633806; }
+    .n-ou      { background: #FAEEDA; color: #633806; border-color: #FAC775; }
+    .n-ou      .node-row2 { opacity: 0.85; }
+    .n-ou      .peg-tag { background: #FAC775; color: #633806; }
 
-    .node-atasan { background: #E1F5EE; color: #085041; border-color: #9FE1CB; }
-    .node-atasan .node-row2 { opacity: 0.85; }
-    .node-atasan .peg-tag { background: #9FE1CB; color: #085041; }
+    .n-atasan  { background: #E1F5EE; color: #085041; border-color: #9FE1CB; }
+    .n-atasan  .node-row2 { opacity: 0.85; }
+    .n-atasan  .peg-tag { background: #9FE1CB; color: #085041; }
 
-    .node-pegawai { background: #ffffff; color: #1a1917; border-color: #d0cdc7; }
-    .node-pegawai .node-row2 { color: var(--text-sec); }
-    .node-pegawai .peg-tag { background: #F1EFE8; color: #444441; }
+    .n-pegawai { background: #ffffff; color: #1a1917; border-color: #d0cdc7; }
+    .n-pegawai .node-row2 { color: var(--text-sec); }
+    .n-pegawai .peg-tag { background: #F1EFE8; color: #444441; }
 
-    /* ── LAYOUT ── */
+    /* ── Layout primitives ── */
 
-    /* Row 1: Unit ── Kantor (horizontal) */
-    .level-top {
+    /* Horizontal pair: NodeA ── NodeB */
+    .h-pair {
       display: flex;
       flex-direction: row;
       align-items: center;
       gap: 0;
-      margin-bottom: 0;
     }
-    .h-line { width: 36px; height: 1.5px; background: var(--line); flex-shrink: 0; }
+    .h-line { width: var(--gap-h); height: 1.5px; background: var(--line); flex-shrink: 0; }
 
-    /* Below kantor: vertical tree */
-    .v-children {
+    /* Vertical children block with left border line */
+    .v-block {
       display: flex;
       flex-direction: column;
       border-left: 1.5px solid var(--line);
       margin-left: 18px;
-      padding-top: 6px;
-      padding-bottom: 6px;
+      padding: 5px 0;
     }
-    .v-child {
+
+    /* Each child row: horizontal elbow then content */
+    .v-item {
       display: flex;
       flex-direction: row;
       align-items: flex-start;
-      padding: 6px 0;
+      padding: 5px 0;
       position: relative;
     }
-    .v-child::before {
+    .v-item::before {
       content: '';
       position: absolute;
-      left: 0;
-      top: 50%;
-      width: 32px;
+      left: 0; top: 50%;
+      width: var(--gap-h);
       height: 1.5px;
       background: var(--line);
       transform: translateY(-50%);
     }
-    .v-child-indent { padding-left: 32px; display: flex; flex-direction: row; align-items: flex-start; }
-    .v-child-col { display: flex; flex-direction: column; }
-
-    /* Wrapper for unit+kantor + everything below kantor */
-    .kantor-block {
+    .v-item-body {
+      padding-left: var(--gap-h);
       display: flex;
       flex-direction: column;
     }
 
-    /* Org unit block */
-    .ou-block { display: flex; flex-direction: column; }
+    /* Atasan + pegawai group — spacing between groups */
+    .atasan-group { margin-bottom: 10px; }
+    .atasan-group:last-child { margin-bottom: 0; }
 
-    /* Atasan block */
-    .atasan-block { display: flex; flex-direction: column; }
-
-    /* State messages */
-    .state-msg {
-      text-align: center;
-      padding: 4rem 2rem;
-      color: var(--text-hint);
-      font-size: 14px;
-    }
+    /* State */
+    .state-msg { text-align: center; padding: 4rem 2rem; color: var(--text-hint); font-size: 14px; }
 
     @media (max-width: 600px) {
       .controls { flex-direction: column; align-items: flex-start; }
@@ -235,8 +214,8 @@ function parseCSV(text) {
 function findCol(row, ...kws) {
   const keys = Object.keys(row);
   for (const kw of kws) {
-    const found = keys.find(k => k.toLowerCase().includes(kw.toLowerCase()));
-    if (found) return row[found] || '';
+    const f = keys.find(k => k.toLowerCase().includes(kw.toLowerCase()));
+    if (f) return row[f] || '';
   }
   return '';
 }
@@ -244,7 +223,7 @@ function findCol(row, ...kws) {
 function mapRow(r) {
   const keys = Object.keys(r);
   const ouKey = keys.find(k => k.toLowerCase().includes('organizational') || k.toLowerCase() === 'org unit');
-  const orgUnit = ouKey ? r[ouKey] || '' : (Object.values(r)[6] || '');
+  const orgUnit = ouKey ? r[ouKey]||'' : (Object.values(r)[6]||'');
   return {
     jabatan: findCol(r, 'position', 'jabatan'),
     nama:    findCol(r, 'full name', 'nama', 'name'),
@@ -257,21 +236,22 @@ function mapRow(r) {
   };
 }
 
-function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 function tr(s, n) { s=s||'—'; return s.length>n ? s.slice(0,n)+'…':s; }
 function uniq(arr) { return [...new Set(arr.filter(Boolean))].sort(); }
 
-function pegTag(peg, cls) {
+function pegTag(peg) {
   if (!peg) return '';
-  return `<span class="peg-tag ${cls}">PeG ${esc(peg)}</span>`;
+  return `<span class="peg-tag">PeG ${esc(peg)}</span>`;
 }
 
-function nodeHtml(cls, row1, row2, peg, pegCls, title) {
-  return `
-    <div class="node ${cls}" title="${esc(title||row1)}">
-      <div class="node-row1">${esc(tr(row1, 24))}</div>
-      <div class="node-row2">${esc(tr(row2, 22))} ${pegTag(peg, pegCls)}</div>
-    </div>`;
+function nodeEl(cls, row1, row2, peg, title) {
+  return `<div class="node ${cls}" title="${esc(title||row1||'')}">
+    <div class="node-row1">${esc(tr(row1,26))}</div>
+    <div class="node-row2">${esc(tr(row2,24))}${pegTag(peg)}</div>
+  </div>`;
 }
 
 function buildTree(unit, kantor) {
@@ -284,87 +264,95 @@ function buildTree(unit, kantor) {
     ? uniq(rows.map(d => d.lokasi))
     : [kantor];
 
-  // Unit node + kantor horizontal
   let html = `<div style="display:inline-block;min-width:max-content">`;
+
+  // Level 1: Unit Layanan
+  html += `<div style="display:flex;flex-direction:row;align-items:flex-start">`;
+  html += nodeEl('n-unit', unit, `${rows.length} pegawai`, '', unit);
+  html += `<div class="h-line" style="margin-top:22px"></div>`;
+
+  // Level 2: Kantor — vertical list sejajar unit
+  html += `<div style="display:flex;flex-direction:column;gap:0">`;
 
   kantorList.forEach((lok, ki) => {
     const lokRows = rows.filter(d => d.lokasi === lok);
 
-    // Unit + Kantor sejajar horizontal
-    html += `<div style="display:flex;flex-direction:column;margin-bottom:${ki < kantorList.length-1 ? '2.5rem':'0'}">`;
-    html += `<div class="level-top">`;
-    // Unit node hanya di baris pertama kantor
-    if (ki === 0) {
-      html += nodeHtml('node-unit', unit, `${rows.length} pegawai`, '', '', unit);
-      html += `<div class="h-line"></div>`;
-    } else {
-      // Spacer same width as unit node + hline
-      html += `<div style="width:calc(140px + 36px)"></div>`;
-    }
-    html += nodeHtml('node-kantor', lok, `${lokRows.length} pegawai`, '', '', lok);
-    html += `</div>`; // level-top
+    html += `<div style="display:flex;flex-direction:column;margin-bottom:${ki < kantorList.length-1 ? '1.5rem':'0'}">`;
 
-    // Org Unit list — vertical dari kantor
+    // Kantor node
+    html += `<div class="h-pair" style="align-items:flex-start">`;
+    html += nodeEl('n-kantor', lok, `${lokRows.length} pegawai`, '', lok);
+    html += `</div>`;
+
+    // Level 3: Org Unit — vertical dari kantor
     const ouList = uniq(lokRows.map(d => d.orgUnit));
-    html += `<div style="margin-left:calc(140px + 36px)">`;
-    html += `<div class="v-children">`;
 
+    html += `<div class="v-block">`;
     ouList.forEach(ou => {
       const ouRows = lokRows.filter(d => (d.orgUnit||'') === ou);
-      html += `<div class="v-child">`;
-      html += `<div class="v-child-indent">`;
-      html += `<div class="v-child-col">`;
-      html += nodeHtml('node-ou', ou, `${ouRows.length} pegawai`, '', '', ou);
 
-      // Atasan list — vertical dari org unit
+      html += `<div class="v-item">`;
+      html += `<div class="v-item-body">`;
+
+      // Org Unit ──── Atasan (sejajar horizontal)
+      // Group atasan under this ou
       const atasanList = uniq(ouRows.map(d => d.atasan));
-      html += `<div class="v-children">`;
 
-      atasanList.forEach(at => {
+      // Org Unit node
+      html += `<div style="display:flex;flex-direction:row;align-items:flex-start">`;
+      html += nodeEl('n-ou', ou, `${ouRows.length} pegawai`, '', ou);
+      html += `<div class="h-line" style="margin-top:22px"></div>`;
+
+      // Atasan column (vertical list sejajar ou)
+      html += `<div style="display:flex;flex-direction:column;gap:0">`;
+
+      atasanList.forEach((at, ai) => {
         const atRows = ouRows.filter(d => d.atasan === at);
-        // Cari jabatan & PeG atasan dari data
         const atData = allData.find(d => d.nama === at);
         const atJab  = atData ? atData.jabatan : '';
         const atPeg  = atData ? atData.peg : '';
 
-        html += `<div class="v-child">`;
-        html += `<div class="v-child-indent">`;
-        html += `<div class="v-child-col">`;
+        html += `<div class="atasan-group">`;
 
-        // Atasan node: baris 1 = Jabatan, baris 2 = Nama · PeG
-        html += `
-          <div class="node node-atasan" title="${esc(at)}">
-            <div class="node-row1">${esc(tr(atJab||'(Jabatan)', 24))}</div>
-            <div class="node-row2">${esc(tr(at, 22))} ${pegTag(atPeg, 'node-atasan')}</div>
-          </div>`;
+        // Atasan node: baris1=Jabatan, baris2=Nama·PeG
+        html += `<div class="h-pair" style="align-items:flex-start">`;
+        html += `<div class="node n-atasan" title="${esc(at)}">
+          <div class="node-row1">${esc(tr(atJab||'(Jabatan)',26))}</div>
+          <div class="node-row2">${esc(tr(at,24))}${pegTag(atPeg)}</div>
+        </div>`;
+        html += `</div>`;
 
-        // Pegawai list — vertical dari atasan
-        html += `<div class="v-children">`;
+        // Pegawai — vertical dari atasan
+        html += `<div class="v-block">`;
         atRows.forEach(peg => {
-          html += `<div class="v-child">`;
-          html += `<div class="v-child-indent">`;
-          // Pegawai node: baris 1 = Jabatan, baris 2 = Nama · PeG
-          html += `
-            <div class="node node-pegawai" title="${esc(peg.nama)}">
-              <div class="node-row1">${esc(tr(peg.jabatan||'(Jabatan)', 24))}</div>
-              <div class="node-row2">${esc(tr(peg.nama, 22))} ${pegTag(peg.peg, 'node-pegawai')}</div>
-            </div>`;
-          html += `</div></div>`; // v-child-indent + v-child
+          html += `<div class="v-item">`;
+          html += `<div class="v-item-body">`;
+          // Pegawai node: baris1=Jabatan, baris2=Nama·PeG
+          html += `<div class="node n-pegawai" title="${esc(peg.nama)}">
+            <div class="node-row1">${esc(tr(peg.jabatan||'(Jabatan)',26))}</div>
+            <div class="node-row2">${esc(tr(peg.nama,24))}${pegTag(peg.peg)}</div>
+          </div>`;
+          html += `</div></div>`; // v-item-body + v-item
         });
-        html += `</div>`; // v-children pegawai
+        html += `</div>`; // v-block pegawai
 
-        html += `</div></div></div>`; // v-child-col + v-child-indent + v-child
+        html += `</div>`; // atasan-group
       });
-      html += `</div>`; // v-children atasan
 
-      html += `</div></div></div>`; // v-child-col + v-child-indent + v-child
+      html += `</div>`; // atasan column
+      html += `</div>`; // ou + atasan row
+
+      html += `</div></div>`; // v-item-body + v-item
     });
+    html += `</div>`; // v-block ou
 
-    html += `</div></div>`; // v-children ou + margin wrapper
     html += `</div>`; // kantor block
   });
 
-  html += `</div>`;
+  html += `</div>`; // kantor column
+  html += `</div>`; // unit + kantor row
+  html += `</div>`; // root
+
   return html;
 }
 
@@ -396,7 +384,10 @@ function render() {
 
 function updateKantor(unit) {
   const sel = document.getElementById('f-kantor');
-  if (!unit) { sel.innerHTML = '<option value="">— Pilih Kantor Induk/UP —</option>'; sel.disabled = true; return; }
+  if (!unit) {
+    sel.innerHTML = '<option value="">— Pilih Kantor Induk/UP —</option>';
+    sel.disabled = true; return;
+  }
   const list = uniq(allData.filter(d => d.unit === unit).map(d => d.lokasi));
   sel.innerHTML = '<option value="">— Pilih Kantor Induk/UP —</option>' +
     (list.length > 1 ? `<option value="__all__">Semua Kantor (${list.length})</option>` : '') +
