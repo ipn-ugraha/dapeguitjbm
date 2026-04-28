@@ -266,7 +266,8 @@
   <div class="controls">
     <input type="text" id="search" placeholder="Cari nama, NIP, jabatan..." />
     <select id="f-lokasi"><option value="">Semua Kantor Induk/UP</option></select>
-    <select id="f-atasan" disabled><option value="">— Pilih Kantor dulu —</option></select>
+    <select id="f-jabatan" disabled><option value="">— Pilih Kantor dulu —</option></select>
+    <select id="f-atasan" disabled><option value="">— Pilih Jabatan dulu —</option></select>
     <button class="btn-reset" id="btn-reset">Reset filter</button>
   </div>
 
@@ -375,14 +376,30 @@ function pillClass(jabatan) {
   return 'pill-gray';
 }
 
-function updateAtasanFilter(lokasi) {
-  const sel = document.getElementById('f-atasan');
+function updateJabatanFilter(lokasi) {
+  const sel = document.getElementById('f-jabatan');
   if (!lokasi) {
     sel.innerHTML = '<option value="">— Pilih Kantor dulu —</option>';
     sel.disabled = true;
     return;
   }
-  const list = [...new Set(allData.filter(d => d.lokasi === lokasi).map(d => d.atasan).filter(Boolean))].sort();
+  const list = [...new Set(allData.filter(d => d.lokasi === lokasi).map(d => d.jabatan).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Semua Jabatan</option>' +
+    list.map(a => `<option value="${a}">${a}</option>`).join('');
+  sel.disabled = false;
+}
+
+function updateAtasanFilter(lokasi, jabatan) {
+  const sel = document.getElementById('f-atasan');
+  if (!jabatan) {
+    sel.innerHTML = '<option value="">— Pilih Jabatan dulu —</option>';
+    sel.disabled = true;
+    return;
+  }
+  const list = [...new Set(
+    allData.filter(d => (!lokasi || d.lokasi === lokasi) && (!jabatan || d.jabatan === jabatan))
+           .map(d => d.atasan).filter(Boolean)
+  )].sort();
   sel.innerHTML = '<option value="">Semua Nama Atasan</option>' +
     list.map(a => `<option value="${a}">${a}</option>`).join('');
   sel.disabled = false;
@@ -390,12 +407,14 @@ function updateAtasanFilter(lokasi) {
 
 function applyFilters() {
   const lokasi  = document.getElementById('f-lokasi').value;
+  const jabatan = document.getElementById('f-jabatan').value;
   const atasan  = document.getElementById('f-atasan').value;
   const search  = document.getElementById('search').value.toLowerCase().trim();
 
   filtered = allData.filter(d => {
-    if (lokasi && d.lokasi !== lokasi)  return false;
-    if (atasan && d.atasan !== atasan)  return false;
+    if (lokasi  && d.lokasi  !== lokasi)  return false;
+    if (jabatan && d.jabatan !== jabatan) return false;
+    if (atasan  && d.atasan  !== atasan)  return false;
     if (search) {
       const hay = [d.jabatan, d.nama, d.nip, d.unit, d.lokasi, d.atasan].join(' ').toLowerCase();
       if (!hay.includes(search)) return false;
@@ -514,7 +533,16 @@ async function loadData() {
 
 document.getElementById('f-lokasi').addEventListener('change', () => {
   const lok = document.getElementById('f-lokasi').value;
-  updateAtasanFilter(lok);
+  updateJabatanFilter(lok);
+  document.getElementById('f-jabatan').value = '';
+  document.getElementById('f-atasan').innerHTML = '<option value="">— Pilih Jabatan dulu —</option>';
+  document.getElementById('f-atasan').disabled = true;
+  applyFilters();
+});
+document.getElementById('f-jabatan').addEventListener('change', () => {
+  const lok = document.getElementById('f-lokasi').value;
+  const jab = document.getElementById('f-jabatan').value;
+  updateAtasanFilter(lok, jab);
   document.getElementById('f-atasan').value = '';
   applyFilters();
 });
@@ -522,9 +550,12 @@ document.getElementById('f-atasan').addEventListener('change', applyFilters);
 document.getElementById('search').addEventListener('input', applyFilters);
 document.getElementById('btn-reset').addEventListener('click', () => {
   document.getElementById('f-lokasi').value = '';
+  document.getElementById('f-jabatan').value = '';
+  document.getElementById('f-jabatan').disabled = true;
+  document.getElementById('f-jabatan').innerHTML = '<option value="">— Pilih Kantor dulu —</option>';
   document.getElementById('f-atasan').value = '';
   document.getElementById('f-atasan').disabled = true;
-  document.getElementById('f-atasan').innerHTML = '<option value="">— Pilih Kantor dulu —</option>';
+  document.getElementById('f-atasan').innerHTML = '<option value="">— Pilih Jabatan dulu —</option>';
   document.getElementById('search').value = '';
   applyFilters();
 });
