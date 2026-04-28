@@ -215,9 +215,41 @@ function applyFilters() {
   renderStats();
 }
 
-function getBawahan(pegawai) {
-  // Semua pegawai yang atasannya = nama pegawai ini
-  return allData.filter(d => d.atasan === pegawai.nama && d.nama !== pegawai.nama);
+function getBawahan(nama) {
+  return allData.filter(d => d.atasan === nama && d.nama !== nama);
+}
+
+function renderBawahanRows(pegawai, level, parentIsLast) {
+  const bawahan = getBawahan(pegawai.nama);
+  let html = "";
+  bawahan.forEach((b, bi) => {
+    const isLast = bi === bawahan.length - 1;
+    const indent = "  ".repeat(level);
+    const prefix = isLast ? "└" : "├";
+    const paddingLeft = 14 + (level * 18);
+
+    html += `<tr class="row-bawahan">
+      <td></td>
+      <td title="${b.unit}" style="color:var(--text-hint);font-size:12px">${b.unit||"—"}</td>
+      <td title="${b.lokasi}" style="color:var(--text-hint);font-size:12px">${b.lokasi||"—"}</td>
+      <td></td>
+      <td><span class="pill pill-bawahan" title="${b.jabatan}">${b.jabatan||"—"}</span></td>
+      <td>
+        <div class="bawahan-indent" style="padding-left:${paddingLeft}px">
+          <span class="bawahan-icon">${prefix}</span>
+          <span style="color:${level===1?'var(--text-sec)':'var(--text-hint)'};font-size:${level===1?'13':'12'}px">${b.nama||"—"}</span>
+        </div>
+      </td>
+      <td class="nip-mono" style="font-size:11px">${b.nip||"—"}</td>
+      <td style="text-align:center;color:var(--text-hint);font-size:11px">${b.peg||"—"}</td>
+    </tr>`;
+
+    // Level 3: bawahan dari bawahan (rekursif sampai level 3)
+    if (level < 3) {
+      html += renderBawahanRows(b, level + 1, isLast);
+    }
+  });
+  return html;
 }
 
 function renderTable() {
@@ -235,10 +267,9 @@ function renderTable() {
 
   let html = "";
   rows.forEach((d, i) => {
-    const bawahan = getBawahan(d);
     const isLast = i === rows.length - 1;
 
-    // Main row
+    // Main row (level 1)
     html += `<tr class="row-main">
       <td style="color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">${start+i+1}</td>
       <td title="${d.unit}">${d.unit||"—"}</td>
@@ -250,27 +281,10 @@ function renderTable() {
       <td style="text-align:center;color:var(--text-sec)">${d.peg||"—"}</td>
     </tr>`;
 
-    // Bawahan rows
-    bawahan.forEach((b, bi) => {
-      const isLastB = bi === bawahan.length - 1;
-      html += `<tr class="row-bawahan">
-        <td></td>
-        <td title="${b.unit}" style="color:var(--text-hint);font-size:12px">${b.unit||"—"}</td>
-        <td title="${b.lokasi}" style="color:var(--text-hint);font-size:12px">${b.lokasi||"—"}</td>
-        <td></td>
-        <td><span class="pill pill-bawahan" title="${b.jabatan}">${b.jabatan||"—"}</span></td>
-        <td>
-          <div class="bawahan-indent">
-            <span class="bawahan-icon">${isLastB ? "└" : "├"}</span>
-            <span style="color:var(--text-sec)">${b.nama||"—"}</span>
-          </div>
-        </td>
-        <td class="nip-mono" style="font-size:11px">${b.nip||"—"}</td>
-        <td style="text-align:center;color:var(--text-hint);font-size:11px">${b.peg||"—"}</td>
-      </tr>`;
-    });
+    // Bawahan level 2 & 3
+    html += renderBawahanRows(d, 1, isLast);
 
-    // Separator between pegawai groups
+    // Separator
     if (!isLast) {
       html += `<tr class="row-sep"><td colspan="8"></td></tr>`;
     }
