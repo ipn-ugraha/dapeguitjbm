@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Pegawai per Jenjang</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --surface2: #f0ede8;
+      --border: rgba(0,0,0,0.09);
+      --border-md: rgba(0,0,0,0.15);
+      --text: #1a1917;
+      --text-sec: #6b6a66;
+      --text-hint: #9e9c98;
+      --accent: #185FA5;
+      --blue-bg: #E6F1FB; --blue-text: #0C447C;
+      --teal-bg: #E1F5EE; --teal-text: #085041;
+      --amber-bg: #FAEEDA; --amber-text: #633806;
+      --gray-bg: #F1EFE8; --gray-text: #444441;
+      --radius: 10px; --radius-sm: 6px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.6; }
+    .page { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* Header */
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap; }
+    .page-title { font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+    .page-sub { font-size: 13px; color: var(--text-sec); margin-top: 3px; }
+    .source-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-sec); border: 0.5px solid var(--border-md); border-radius: 99px; padding: 4px 12px; background: var(--surface); }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: #1D9E75; display: inline-block; }
+
+    /* Stats */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 18px; }
+    .stat-lbl { font-size: 11px; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .stat-val { font-size: 26px; font-weight: 600; color: var(--text); line-height: 1; }
+
+    /* Controls */
+    .controls { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .controls select, .controls input[type="text"] { font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); background: var(--bg); border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); padding: 7px 12px; outline: none; flex: 1; min-width: 160px; }
+    .controls select:focus, .controls input[type="text"]:focus { border-color: var(--accent); background: var(--surface); }
+    .btn-reset { font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-sec); background: transparent; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); padding: 7px 14px; cursor: pointer; white-space: nowrap; }
+    .btn-reset:hover { background: var(--surface2); }
+
+    /* Table */
+    .tbl-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { background: var(--surface2); }
+    th { text-align: left; font-size: 11px; font-weight: 500; color: var(--text-sec); padding: 10px 14px; border-bottom: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; cursor: pointer; user-select: none; }
+    th:hover { color: var(--text); }
+    th.sorted { color: var(--accent); }
+    td { padding: 10px 14px; border-bottom: 0.5px solid var(--border); color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg); }
+    .pill { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 99px; font-weight: 500; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pill-blue  { background: var(--blue-bg);  color: var(--blue-text); }
+    .pill-teal  { background: var(--teal-bg);  color: var(--teal-text); }
+    .pill-amber { background: var(--amber-bg); color: var(--amber-text); }
+    .pill-gray  { background: var(--gray-bg);  color: var(--gray-text); }
+    .nip-mono   { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-sec); }
+    .name-strong { font-weight: 500; }
+    .atasan-sec  { color: var(--text-sec); }
+
+    /* Pager */
+    .pager { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 0.5px solid var(--border); font-size: 12px; color: var(--text-sec); }
+    .pager-btns { display: flex; gap: 6px; }
+    .pager-btn { font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-sec); background: transparent; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); padding: 5px 12px; cursor: pointer; }
+    .pager-btn:hover:not(:disabled) { background: var(--surface2); }
+    .pager-btn:disabled { opacity: 0.35; cursor: default; }
+    .empty-row td, .loading-row td { text-align: center; padding: 2.5rem; color: var(--text-hint); }
+
+    /* Jenjang pills in filter */
+    .jenjang-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .j-tag { font-size: 12px; padding: 5px 14px; border-radius: 99px; border: 0.5px solid var(--border-md); background: var(--surface); color: var(--text-sec); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.1s; }
+    .j-tag:hover { background: var(--surface2); }
+    .j-tag.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 500; }
+    .j-tag-all { background: var(--surface2); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Data Pegawai per Jenjang</div>
+      <div class="page-sub" id="subtitle">Memuat data...</div>
+    </div>
+    <div class="source-badge"><span class="dot"></span> Google Sheets · Live</div>
+  </div>
+
+  <div class="stat-grid" id="stats">
+    <div class="stat-card"><div class="stat-lbl">Total Pegawai</div><div class="stat-val">—</div></div>
+    <div class="stat-card"><div class="stat-lbl">Jenjang</div><div class="stat-val">—</div></div>
+    <div class="stat-card"><div class="stat-lbl">Unit</div><div class="stat-val">—</div></div>
+    <div class="stat-card"><div class="stat-lbl">Atasan</div><div class="stat-val">—</div></div>
+  </div>
+
+  <div class="controls">
+    <div class="jenjang-tags" id="jenjang-tags">
+      <button class="j-tag j-tag-all active" data-val="">Semua Jenjang</button>
+    </div>
+    <input type="text" id="search" placeholder="Cari nama, NIP, jabatan..." style="min-width:200px;flex:1" />
+    <button class="btn-reset" id="btn-reset">Reset</button>
+  </div>
+
+  <div class="tbl-card">
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:36px">#</th>
+            <th data-col="unit">Unit</th>
+            <th data-col="lokasi">Lokasi</th>
+            <th data-col="atasan">Atasan</th>
+            <th data-col="jabatan">Jabatan</th>
+            <th data-col="nama">Nama</th>
+            <th data-col="nip">NIP</th>
+            <th data-col="peg" style="width:50px">PeG</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body">
+          <tr class="loading-row"><td colspan="8">Memuat data dari Google Sheets...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span id="pager-info">—</span>
+      <div class="pager-btns">
+        <button class="pager-btn" id="btn-prev" disabled>&#8592; Prev</button>
+        <button class="pager-btn" id="btn-next" disabled>Next &#8594;</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdx_0oA1EIY2PpzNcf1EYbjJ6XhNRGbHff86rr1DFZsJhP_xUrE3XaATeCMHhkvR4lPngfpdiw04cV/pub?output=csv";
+const PER_PAGE = 20;
+let allData = [], filtered = [], sortCol = null, sortDir = 1, page = 0, activeJenjang = '';
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) return [];
+  const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g,'').trim());
+  return lines.slice(1).map(line => {
+    const vals = []; let cur = '', inQ = false;
+    for (const c of line) {
+      if (c === '"') { inQ = !inQ; }
+      else if (c === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+      else cur += c;
+    }
+    vals.push(cur.trim());
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (vals[i]||'').replace(/^"|"$/g,'').trim());
+    return obj;
+  });
+}
+
+function findCol(row, ...kws) {
+  const keys = Object.keys(row);
+  for (const kw of kws) {
+    const f = keys.find(k => k.toLowerCase().includes(kw.toLowerCase()));
+    if (f) return row[f] || '';
+  }
+  return '';
+}
+
+function mapRow(r) {
+  const keys = Object.keys(r);
+  const jenjangKey = keys.find(k => k.trim() === 'Jenjang - Main Grp Text')
+                  || keys.find(k => k.toLowerCase().includes('jenjang'))
+                  || keys.find(k => k.toLowerCase().includes('main grp'));
+  return {
+    jabatan: findCol(r, 'Position', 'position', 'jabatan'),
+    nama:    findCol(r, 'Full Name', 'full name', 'nama'),
+    nip:     findCol(r, 'Prev.Per.No', 'prev.per', 'nip'),
+    peg:     findCol(r, 'PeG', 'peg'),
+    unit:    findCol(r, 'Unit Layanan', 'unit layanan', 'unit'),
+    lokasi:  findCol(r, 'Kantor Induk/UP', 'kantor induk', 'kantor', 'lokasi'),
+    atasan:  findCol(r, 'Nama Atasan', 'nama atasan', 'atasan'),
+    jenjang: jenjangKey ? (r[jenjangKey]||'').trim() : '',
+  };
+}
+
+function pillClass(jabatan) {
+  const v = (jabatan||'').toLowerCase();
+  if (v.includes('manager') || v.includes('kepala') || v.includes('head') || v.includes('manajer')) return 'pill-blue';
+  if (v.includes('senior') || v.includes('ahli') || v.includes('utama')) return 'pill-teal';
+  if (v.includes('junior') || v.includes('pelaksana') || v.includes('staf') || v.includes('staff')) return 'pill-amber';
+  return 'pill-gray';
+}
+
+function applyFilters() {
+  const search = document.getElementById('search').value.toLowerCase().trim();
+  filtered = allData.filter(d => {
+    if (activeJenjang && d.jenjang !== activeJenjang) return false;
+    if (search) {
+      const hay = [d.jabatan, d.nama, d.nip, d.unit, d.lokasi, d.atasan, d.jenjang].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+  if (sortCol) {
+    filtered.sort((a, b) => (a[sortCol]||'').localeCompare(b[sortCol]||'') * sortDir);
+  }
+  page = 0;
+  renderTable();
+  renderStats();
+}
+
+function renderTable() {
+  const start = page * PER_PAGE, end = start + PER_PAGE;
+  const rows  = filtered.slice(start, end);
+  const tbody = document.getElementById('tbl-body');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Tidak ada data yang sesuai</td></tr>';
+    document.getElementById('pager-info').textContent = '0 data';
+    document.getElementById('btn-prev').disabled = true;
+    document.getElementById('btn-next').disabled = true;
+    return;
+  }
+  tbody.innerHTML = rows.map((d, i) => `
+    <tr>
+      <td style="color:var(--text-hint);font-family:'DM Mono',monospace">${start+i+1}</td>
+      <td title="${d.unit}">${d.unit||'—'}</td>
+      <td title="${d.lokasi}">${d.lokasi||'—'}</td>
+      <td class="atasan-sec" title="${d.atasan}">${d.atasan||'—'}</td>
+      <td><span class="pill ${pillClass(d.jabatan)}" title="${d.jabatan}">${d.jabatan||'—'}</span></td>
+      <td class="name-strong" title="${d.nama}">${d.nama||'—'}</td>
+      <td class="nip-mono">${d.nip||'—'}</td>
+      <td style="text-align:center;color:var(--text-sec)">${d.peg||'—'}</td>
+    </tr>
+  `).join('');
+  const total = filtered.length;
+  document.getElementById('pager-info').textContent = `${start+1}–${Math.min(end,total)} dari ${total} pegawai`;
+  document.getElementById('btn-prev').disabled = page === 0;
+  document.getElementById('btn-next').disabled = end >= total;
+}
+
+function renderStats() {
+  const total   = filtered.length;
+  const jenjang = new Set(filtered.map(d => d.jenjang).filter(Boolean)).size;
+  const units   = new Set(filtered.map(d => d.unit).filter(Boolean)).size;
+  const atass   = new Set(filtered.map(d => d.atasan).filter(Boolean)).size;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card"><div class="stat-lbl">Total Pegawai</div><div class="stat-val">${total}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Jenjang</div><div class="stat-val">${jenjang}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Unit</div><div class="stat-val">${units}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Atasan</div><div class="stat-val">${atass}</div></div>
+  `;
+}
+
+function buildJenjangTags(list) {
+  const wrap = document.getElementById('jenjang-tags');
+  wrap.innerHTML = '<button class="j-tag j-tag-all active" data-val="">Semua Jenjang</button>' +
+    list.map(j => `<button class="j-tag" data-val="${j}">${j}</button>`).join('');
+  wrap.querySelectorAll('.j-tag').forEach(btn => {
+    btn.addEventListener('click', () => {
+      wrap.querySelectorAll('.j-tag').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeJenjang = btn.dataset.val;
+      applyFilters();
+    });
+  });
+}
+
+async function loadData() {
+  try {
+    const resp = await fetch(CSV_URL);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    allData  = parseCSV(text).map(mapRow).filter(d => d.nama || d.jabatan);
+    filtered = [...allData];
+
+    document.getElementById('subtitle').textContent =
+      `${allData.length} pegawai · Data real-time dari Google Sheets`;
+
+    const jenjangList = [...new Set(allData.map(d => d.jenjang).filter(Boolean))].sort();
+    buildJenjangTags(jenjangList);
+
+    renderStats();
+    renderTable();
+  } catch(err) {
+    document.getElementById('tbl-body').innerHTML =
+      '<tr class="empty-row"><td colspan="8">Gagal memuat data. Pastikan Google Sheet sudah dipublish ke web.</td></tr>';
+    document.getElementById('subtitle').textContent = 'Gagal memuat data';
+    console.error(err);
+  }
+}
+
+document.getElementById('search').addEventListener('input', applyFilters);
+document.getElementById('btn-reset').addEventListener('click', () => {
+  activeJenjang = '';
+  document.querySelectorAll('.j-tag').forEach(b => b.classList.remove('active'));
+  document.querySelector('.j-tag-all').classList.add('active');
+  document.getElementById('search').value = '';
+  applyFilters();
+});
+document.getElementById('btn-prev').addEventListener('click', () => { if (page > 0) { page--; renderTable(); } });
+document.getElementById('btn-next').addEventListener('click', () => { if ((page+1)*PER_PAGE < filtered.length) { page++; renderTable(); } });
+document.querySelectorAll('th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    document.querySelectorAll('th').forEach(t => t.classList.remove('sorted'));
+    if (sortCol === col) { sortDir *= -1; } else { sortCol = col; sortDir = 1; }
+    th.classList.add('sorted');
+    applyFilters();
+  });
+});
+
+loadData();
+</script>
+</body>
+</html>
