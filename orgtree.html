@@ -270,70 +270,79 @@ function buildTree(unit, kantor) {
 
   let html = `<div style="display:inline-block;min-width:max-content">`;
 
-  // Level 1: Unit Layanan
+  // Level 1: Unit Layanan + Kantor sejajar horizontal
   html += `<div style="display:flex;flex-direction:row;align-items:flex-start">`;
   html += nodeEl('n-unit', unit, `${rows.length} pegawai`, '', unit);
   html += `<div class="h-line" style="margin-top:22px"></div>`;
-
-  // Level 2: Kantor — vertical list sejajar unit
   html += `<div style="display:flex;flex-direction:column;gap:0">`;
 
   kantorList.forEach((lok, ki) => {
     const lokRows = rows.filter(d => d.lokasi === lok);
 
-    html += `<div style="display:flex;flex-direction:column;margin-bottom:${ki < kantorList.length-1 ? '1.5rem':'0'}">`;
-
-    // Kantor node
-    html += `<div class="h-pair" style="align-items:flex-start">`;
+    html += `<div style="display:flex;flex-direction:column;margin-bottom:${ki < kantorList.length-1 ? '2rem':'0'}">`;
     html += nodeEl('n-kantor', lok, `${lokRows.length} pegawai`, '', lok);
-    html += `</div>`;
 
-    // Level 3: Org Unit — vertical dari kantor
+    // Kumpulkan semua atasan unik di level Kantor (bukan per Org Unit)
+    // Satu atasan hanya muncul SEKALI di seluruh kantor
+    const seenAtasan = new Set();
+    const atasanMap = {}; // atasan -> { orgUnit, jabatan, peg, pegawai[] }
+
+    lokRows.forEach(peg => {
+      const at = peg.atasan || '(Tanpa Atasan)';
+      const ou = peg.orgUnit || '(Org Unit)';
+      if (!atasanMap[at]) {
+        atasanMap[at] = { orgUnit: ou, pegawai: [] };
+      }
+      atasanMap[at].pegawai.push(peg);
+    });
+
+    // Group: orgUnit -> list atasan (urut, tidak duplikat)
+    const ouAtas = {}; // orgUnit -> [atasan, ...]
+    const processedAtasan = new Set();
+
+    // Tentukan Org Unit tiap atasan berdasarkan mayoritas pegawainya
+    Object.entries(atasanMap).forEach(([at, info]) => {
+      const ou = info.orgUnit;
+      if (!ouAtas[ou]) ouAtas[ou] = [];
+      ouAtas[ou].push(at);
+    });
+
     const ouList = uniq(lokRows.map(d => d.orgUnit));
 
     html += `<div class="v-block">`;
     ouList.forEach(ou => {
       const ouRows = lokRows.filter(d => (d.orgUnit||'') === ou);
+      // Atasan yang belongs to this org unit dan belum ditampilkan
+      const atasanHere = uniq(ouRows.map(d => d.atasan||'(Tanpa Atasan)'))
+        .filter(at => !processedAtasan.has(at));
 
-      html += `<div class="v-item">`;
-      html += `<div class="v-item-body">`;
+      if (atasanHere.length === 0) return;
 
-      // Deduplikasi atasan: kumpulkan semua pegawai per atasan (1 atasan = 1 kali muncul)
-      const atasanMap = {};
-      ouRows.forEach(peg => {
-        const at = peg.atasan || '(Tanpa Atasan)';
-        if (!atasanMap[at]) atasanMap[at] = [];
-        atasanMap[at].push(peg);
-      });
-      const atasanList = Object.keys(atasanMap).sort();
+      html += `<div class="v-item"><div class="v-item-body">`;
 
-      // Org Unit node sejajar atasan
+      // Org Unit ──── Atasan (sejajar)
       html += `<div style="display:flex;flex-direction:row;align-items:flex-start">`;
       html += nodeEl('n-ou', ou, `${ouRows.length} pegawai`, '', ou);
       html += `<div class="h-line" style="margin-top:22px"></div>`;
-
-      // Atasan column — satu atasan hanya muncul sekali
       html += `<div style="display:flex;flex-direction:column;gap:0">`;
 
-      atasanList.forEach((at) => {
-        const atRows = atasanMap[at];
+      atasanHere.forEach(at => {
+        processedAtasan.add(at); // tandai sudah ditampilkan
         const atData = allData.find(d => d.nama === at);
         const atJab  = atData ? atData.jabatan : '';
         const atPeg  = atData ? atData.peg : '';
+        // Semua pegawai milik atasan ini (dari seluruh kantor, bukan hanya ou ini)
+        const atRows = atasanMap[at] ? atasanMap[at].pegawai : [];
 
         html += `<div class="atasan-group">`;
-
-        // Atasan node: baris1=Jabatan Atasan, baris2=Nama Atasan · PeG
         html += `<div class="node n-atasan" title="${esc(at)}">
           <div class="node-row1">${esc(tr(atJab||'(Jabatan)',26))}</div>
           <div class="node-row2">${esc(tr(at,24))}${pegTag(atPeg)}</div>
         </div>`;
 
-        // Pegawai di bawah atasan
         html += `<div class="v-block">`;
         atRows.forEach(peg => {
-          html += `<div class="v-item">`;
-          html += `<div class="v-item-body">`;
+          html += `<div class="v-item"><div class="v-item-body">`;
           html += `<div class="node n-pegawai" title="${esc(peg.nama)}">
             <div class="node-row1">${esc(tr(peg.jabatan||'(Jabatan)',26))}</div>
             <div class="node-row2">${esc(tr(peg.nama,24))}${pegTag(peg.peg)}</div>
@@ -341,24 +350,20 @@ function buildTree(unit, kantor) {
           html += `</div></div>`;
         });
         html += `</div>`; // v-block pegawai
-
         html += `</div>`; // atasan-group
       });
 
       html += `</div>`; // atasan column
       html += `</div>`; // ou + atasan row
-
       html += `</div></div>`; // v-item-body + v-item
     });
     html += `</div>`; // v-block ou
-
     html += `</div>`; // kantor block
   });
 
   html += `</div>`; // kantor column
   html += `</div>`; // unit + kantor row
   html += `</div>`; // root
-
   return html;
 }
 
