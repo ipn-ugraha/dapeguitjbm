@@ -96,7 +96,7 @@
   </div>
 
   <div class="controls">
-    <select id="f-ultg"><option value="">— Pilih Nama ULTG —</option></select>
+    <select id="f-lokasi"><option value="">— Pilih Kantor Induk/UP —</option></select>
     <input type="text" id="search" placeholder="Cari nama, NIP, jabatan..." />
     <button class="btn-reset" id="btn-reset">Reset</button>
   </div>
@@ -105,7 +105,7 @@
   <div class="pimpinan-card" id="pimpinan-card">
     <div class="pimpinan-avatar" id="pimpinan-avatar">—</div>
     <div class="pimpinan-info">
-      <div class="pimpinan-label">Pimpinan ULTG · Generalis SPVA PU</div>
+      <div class="pimpinan-label">Pimpinan · Generalis SPVA PU</div>
       <div class="pimpinan-nama" id="pimpinan-nama">—</div>
       <div class="pimpinan-jabatan" id="pimpinan-jabatan">—</div>
       <div class="pimpinan-meta" id="pimpinan-meta"></div>
@@ -216,15 +216,15 @@ function renderPimpinan(ultg) {
   if (!ultg) { card.classList.remove("show"); return; }
 
   // Cari pimpinan: pegawai di ULTG ini dengan jabatan mengandung "Generalis SPVA PU"
-  const ultgRows = allData.filter(d => d.ultg === ultg);
-  const pimpinan = ultgRows.find(d => (d.jabatan||"").toLowerCase().includes("generalis spva pu"))
-                || ultgRows.find(d => (d.jabatan||"").toLowerCase().includes("generalis"))
-                || ultgRows[0];
+  const lokRows = allData.filter(d => d.lokasi === ultg);
+  const pimpinan = lokRows.find(d => (d.jabatan||"").toLowerCase().includes("generalis spva pu"))
+                || lokRows.find(d => (d.jabatan||"").toLowerCase().includes("generalis"))
+                || lokRows[0];
 
   if (!pimpinan) { card.classList.remove("show"); return; }
 
   // Hitung bawahan = semua yang atasannya = nama pimpinan
-  const bawahan = ultgRows.filter(d => d.atasan === pimpinan.nama);
+  const bawahan = lokRows.filter(d => d.atasan === pimpinan.nama);
 
   document.getElementById("pimpinan-avatar").textContent = initials(pimpinan.nama);
   document.getElementById("pimpinan-nama").textContent = pimpinan.nama || "—";
@@ -252,7 +252,7 @@ function renderStats(rows) {
 }
 
 function applyFilters() {
-  const ultg   = document.getElementById("f-ultg").value;
+  const ultg   = document.getElementById("f-lokasi").value;
   const search = document.getElementById("search").value.toLowerCase().trim();
 
   filtered = allData.filter(d => {
@@ -318,7 +318,7 @@ async function loadData() {
       `${allData.length} pegawai · Data real-time dari Google Sheets`;
 
     const ultgList = [...new Set(allData.map(d => d.ultg).filter(Boolean))].sort();
-    const selU = document.getElementById("f-ultg");
+    const selU = document.getElementById("f-lokasi");
     selU.innerHTML = "<option value="">— Pilih Nama ULTG —</option>" +
       ultgList.map(u => `<option value="${u}">${u}</option>`).join("");
 
@@ -331,10 +331,10 @@ async function loadData() {
   }
 }
 
-document.getElementById("f-ultg").addEventListener("change", applyFilters);
+document.getElementById("f-lokasi").addEventListener("change", applyFilters);
 document.getElementById("search").addEventListener("input", applyFilters);
 document.getElementById("btn-reset").addEventListener("click", () => {
-  document.getElementById("f-ultg").value = "";
+  document.getElementById("f-lokasi").value = "";
   document.getElementById("search").value = "";
   document.getElementById("pimpinan-card").classList.remove("show");
   document.getElementById("stats").style.display = "none";
