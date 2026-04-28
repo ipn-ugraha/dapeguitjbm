@@ -222,16 +222,20 @@ function findCol(row, ...kws) {
 
 function mapRow(r) {
   const keys = Object.keys(r);
-  const ouKey = keys.find(k => k.toLowerCase().includes('organizational') || k.toLowerCase() === 'org unit');
-  const orgUnit = ouKey ? r[ouKey]||'' : (Object.values(r)[6]||'');
+  // Exact match "Organizational Unit" first, then fallback partial match, then column G (index 6)
+  const ouKey = keys.find(k => k.trim() === 'Organizational Unit')
+             || keys.find(k => k.toLowerCase().includes('organizational unit'))
+             || keys.find(k => k.toLowerCase().includes('organizational'))
+             || keys.find(k => k.toLowerCase().includes('org unit'));
+  const orgUnit = ouKey ? (r[ouKey]||'').trim() : (Object.values(r)[6]||'').trim();
   return {
-    jabatan: findCol(r, 'position', 'jabatan'),
-    nama:    findCol(r, 'full name', 'nama', 'name'),
-    nip:     findCol(r, 'prev.per', 'nip', 'pers'),
-    peg:     findCol(r, 'peg'),
-    unit:    findCol(r, 'unit layanan', 'unit'),
-    lokasi:  findCol(r, 'kantor induk', 'kantor', 'lokasi', 'up'),
-    atasan:  findCol(r, 'nama atasan', 'atasan', 'supervisor'),
+    jabatan: findCol(r, 'Position', 'position', 'jabatan'),
+    nama:    findCol(r, 'Full Name', 'full name', 'nama', 'name'),
+    nip:     findCol(r, 'Prev.Per.No', 'prev.per', 'nip', 'pers'),
+    peg:     findCol(r, 'PeG', 'peg'),
+    unit:    findCol(r, 'Unit Layanan', 'unit layanan', 'unit'),
+    lokasi:  findCol(r, 'Kantor Induk/UP', 'kantor induk', 'kantor', 'lokasi', 'up'),
+    atasan:  findCol(r, 'Nama Atasan', 'nama atasan', 'atasan', 'supervisor'),
     orgUnit: orgUnit,
   };
 }
