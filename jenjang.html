@@ -226,16 +226,27 @@ function applyFilters() {
   const unit   = document.getElementById("f-unit").value;
   const lokasi = document.getElementById("f-lokasi").value;
   const search = document.getElementById("search").value.toLowerCase().trim();
-  filtered = allData.filter(d => {
+
+  // Base filter: unit + lokasi + search (tanpa jenjang) — untuk update pill counts
+  const baseFiltered = allData.filter(d => {
     if (unit   && d.unit   !== unit)   return false;
     if (lokasi && d.lokasi !== lokasi) return false;
-    if (activeJenjang && d.jenjang !== activeJenjang) return false;
     if (search) {
       const hay = [d.jabatan, d.nama, d.nip, d.unit, d.lokasi, d.atasan, d.jenjang].join(" ").toLowerCase();
       if (!hay.includes(search)) return false;
     }
     return true;
   });
+
+  // Update pill counts sesuai base filter
+  updateJenjangCounts(baseFiltered);
+
+  // Full filter: tambah jenjang
+  filtered = baseFiltered.filter(d => {
+    if (activeJenjang && d.jenjang !== activeJenjang) return false;
+    return true;
+  });
+
   if (sortCol) filtered.sort((a, b) => (a[sortCol]||"").localeCompare(b[sortCol]||"") * sortDir);
   page = 0;
   renderTable();
@@ -359,6 +370,23 @@ function buildJenjangTags(list) {
       activeJenjang = btn.dataset.val;
       applyFilters();
     });
+  });
+}
+
+function updateJenjangCounts(baseFiltered) {
+  // Update angka di pill sesuai filter unit/lokasi yang aktif (tanpa filter jenjang)
+  const wrap = document.getElementById("jenjang-tags");
+  const totalCount = baseFiltered.length;
+  wrap.querySelectorAll(".j-tag").forEach(btn => {
+    const val = btn.dataset.val;
+    const span = btn.querySelector("span");
+    if (!span) return;
+    if (val === "") {
+      span.textContent = totalCount;
+    } else {
+      const cnt = baseFiltered.filter(d => d.jenjang === val).length;
+      span.textContent = cnt;
+    }
   });
 }
 
