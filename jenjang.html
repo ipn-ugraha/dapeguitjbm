@@ -112,12 +112,7 @@
     <div class="source-badge"><span class="dot"></span> Google Sheets · Live</div>
   </div>
 
-  <div class="stat-grid" id="stats">
-    <div class="stat-card"><div class="stat-lbl">Total Pegawai</div><div class="stat-val" id="s-total">—</div></div>
-    <div class="stat-card"><div class="stat-lbl">Jenjang</div><div class="stat-val" id="s-jenjang">—</div></div>
-    <div class="stat-card"><div class="stat-lbl">Unit</div><div class="stat-val" id="s-unit">—</div></div>
-    <div class="stat-card"><div class="stat-lbl">Atasan</div><div class="stat-val" id="s-atasan">—</div></div>
-  </div>
+  <div class="stat-grid" id="stats"></div>
 
   <div class="controls">
     <div class="filter-row">
@@ -332,16 +327,31 @@ function renderTable() {
 }
 
 function renderStats() {
-  document.getElementById("s-total").textContent   = filtered.length;
-  document.getElementById("s-jenjang").textContent = new Set(filtered.map(d => d.jenjang).filter(Boolean)).size;
-  document.getElementById("s-unit").textContent    = new Set(filtered.map(d => d.unit).filter(Boolean)).size;
-  document.getElementById("s-atasan").textContent  = new Set(filtered.map(d => d.atasan).filter(Boolean)).size;
+  const statsEl = document.getElementById("stats");
+  // Total card
+  let html = `<div class="stat-card"><div class="stat-lbl">Total Pegawai</div><div class="stat-val">${filtered.length}</div></div>`;
+  // Per jenjang cards from filtered data
+  const jenjangCount = {};
+  filtered.forEach(d => {
+    if (d.jenjang) jenjangCount[d.jenjang] = (jenjangCount[d.jenjang]||0) + 1;
+  });
+  Object.keys(jenjangCount).sort().forEach(j => {
+    html += `<div class="stat-card"><div class="stat-lbl">${j}</div><div class="stat-val">${jenjangCount[j]}</div></div>`;
+  });
+  // Unit & Atasan
+  html += `<div class="stat-card"><div class="stat-lbl">Unit</div><div class="stat-val">${new Set(filtered.map(d=>d.unit).filter(Boolean)).size}</div></div>`;
+  html += `<div class="stat-card"><div class="stat-lbl">Atasan</div><div class="stat-val">${new Set(filtered.map(d=>d.atasan).filter(Boolean)).size}</div></div>`;
+  statsEl.innerHTML = html;
 }
 
 function buildJenjangTags(list) {
   const wrap = document.getElementById("jenjang-tags");
-  wrap.innerHTML = "<button class=\"j-tag j-tag-all active\" data-val=\"\">Semua Jenjang</button>" +
-    list.map(j => `<button class="j-tag" data-val="${j}">${j}</button>`).join("");
+  const totalAll = allData.length;
+  wrap.innerHTML = `<button class="j-tag j-tag-all active" data-val="">Semua Jenjang <span style="font-size:11px;opacity:0.7">${totalAll}</span></button>` +
+    list.map(j => {
+      const cnt = allData.filter(d => d.jenjang === j).length;
+      return `<button class="j-tag" data-val="${j}">${j} <span style="font-size:11px;opacity:0.7">${cnt}</span></button>`;
+    }).join("");
   wrap.querySelectorAll(".j-tag").forEach(btn => {
     btn.addEventListener("click", () => {
       wrap.querySelectorAll(".j-tag").forEach(b => b.classList.remove("active"));
