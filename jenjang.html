@@ -390,12 +390,24 @@ function updateJenjangCounts(baseFiltered) {
   });
 }
 
+
+function dedupData(data) {
+  const seen = new Set();
+  return data.filter(d => {
+    // Key: kombinasi nama + NIP (lowercase, trim)
+    const key = (d.nama||"").toLowerCase().trim() + "|" + (d.nip||"").toLowerCase().trim();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 async function loadData() {
   try {
     const resp = await fetch(CSV_URL);
     if (!resp.ok) throw new Error("HTTP " + resp.status);
     const text = await resp.text();
-    allData  = parseCSV(text).map(mapRow).filter(d => d.nama || d.jabatan);
+    allData  = parseCSV(text).map(mapRow).filter(d => d.nama || d.jabatan)
+    allData = dedupData(allData);
     filtered = [...allData];
     document.getElementById("subtitle").textContent = `${allData.length} pegawai · Data real-time dari Google Sheets`;
     const unitList = [...new Set(allData.map(d => d.unit).filter(Boolean))].sort();

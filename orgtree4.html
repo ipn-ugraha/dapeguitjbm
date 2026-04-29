@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Struktur Organisasi Pegawai</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --surface2: #eeecea;
+      --border: rgba(0,0,0,0.08);
+      --border-md: rgba(0,0,0,0.14);
+      --text: #1a1917;
+      --text-sec: #6b6a66;
+      --text-hint: #a09e9a;
+      --line: #ccc9c2;
+      --radius-sm: 7px;
+      --node-min: 148px;
+      --node-max: 220px;
+      --gap-h: 36px; /* horizontal line width */
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    .page { max-width: 1500px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+
+    /* Header */
+    .page-header { margin-bottom: 1.75rem; }
+    .page-title { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+    .page-sub { font-size: 13px; color: var(--text-sec); margin-top: 3px; }
+
+    /* Controls */
+    .controls { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .controls select {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500;
+      color: var(--text); background: var(--surface);
+      border: 0.5px solid var(--border-md);
+      border-radius: var(--radius-sm);
+      padding: 8px 14px; outline: none; cursor: pointer; min-width: 200px;
+    }
+    .controls select:focus { border-color: #1D9E75; }
+    .controls select:disabled { opacity: 0.45; cursor: default; }
+    .arrow-sep { color: var(--text-hint); font-size: 18px; font-weight: 300; }
+    .count-badge {
+      font-size: 12px; color: var(--text-sec);
+      background: var(--surface2); border-radius: 99px;
+      padding: 4px 12px; border: 0.5px solid var(--border);
+    }
+
+    /* Legend */
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 1.75rem; align-items: center; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-sec); }
+    .legend-dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+
+    /* Tree scroll */
+    .tree-wrap { overflow-x: auto; overflow-y: visible; padding-bottom: 2rem; }
+
+    /* Node */
+    .node {
+      border-radius: var(--radius-sm);
+      padding: 9px 14px;
+      border: 0.5px solid var(--border-md);
+      min-width: var(--node-min);
+      max-width: var(--node-max);
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .node-row1 { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .node-row2 { font-size: 12px; font-weight: 400; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; }
+    .peg-tag {
+      font-family: 'DM Mono', monospace; font-size: 11px;
+      padding: 1px 6px; border-radius: 4px; flex-shrink: 0;
+    }
+
+    /* Level colors */
+    .n-unit    { background: #1D9E75; color: #fff; border-color: #0F6E56; }
+    .n-unit    .node-row2 { opacity: 0.8; }
+    .n-unit    .peg-tag { background: rgba(255,255,255,0.2); color: #fff; }
+
+    .n-kantor  { background: #E6F1FB; color: #0C447C; border-color: #B5D4F4; }
+    .n-kantor  .node-row2 { opacity: 0.85; }
+    .n-kantor  .peg-tag { background: #B5D4F4; color: #0C447C; }
+
+    .n-ou      { background: #FAEEDA; color: #633806; border-color: #FAC775; }
+    .n-ou      .node-row2 { opacity: 0.85; }
+    .n-ou      .peg-tag { background: #FAC775; color: #633806; }
+
+    .n-atasan  { background: #E1F5EE; color: #085041; border-color: #9FE1CB; }
+    .n-atasan  .node-row2 { opacity: 0.85; }
+    .n-atasan  .peg-tag { background: #9FE1CB; color: #085041; }
+
+    .n-pegawai { background: #ffffff; color: #1a1917; border-color: #d0cdc7; }
+    .n-pegawai .node-row2 { color: var(--text-sec); }
+    .n-pegawai .peg-tag { background: #F1EFE8; color: #444441; }
+
+    /* ── Layout primitives ── */
+
+    /* Horizontal pair: NodeA ── NodeB */
+    .h-pair {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 0;
+    }
+    .h-line { width: var(--gap-h); height: 1.5px; background: var(--line); flex-shrink: 0; }
+
+    /* Vertical children block with left border line */
+    .v-block {
+      display: flex;
+      flex-direction: column;
+      border-left: 1.5px solid var(--line);
+      margin-left: 18px;
+      padding: 5px 0;
+    }
+
+    /* Each child row: horizontal elbow then content */
+    .v-item {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      padding: 5px 0;
+      position: relative;
+    }
+    .v-item::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 50%;
+      width: var(--gap-h);
+      height: 1.5px;
+      background: var(--line);
+      transform: translateY(-50%);
+    }
+    .v-item-body {
+      padding-left: var(--gap-h);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Atasan + pegawai group — spacing between groups */
+    .atasan-group { margin-bottom: 10px; }
+    .atasan-group:last-child { margin-bottom: 0; }
+
+    /* State */
+    .state-msg { text-align: center; padding: 4rem 2rem; color: var(--text-hint); font-size: 14px; }
+
+    @media (max-width: 600px) {
+      .controls { flex-direction: column; align-items: flex-start; }
+      .arrow-sep { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <div class="page-title">Struktur Organisasi Pegawai</div>
+    <div class="page-sub" id="subtitle">Memuat data...</div>
+  </div>
+
+  <div class="controls">
+    <select id="f-unit"><option value="">— Pilih Unit Layanan —</option></select>
+    <span class="arrow-sep">›</span>
+    <select id="f-kantor" disabled><option value="">— Pilih Kantor Induk/UP —</option></select>
+    <span class="count-badge" id="count-badge" style="display:none"></span>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div> Unit Layanan</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#B5D4F4"></div> Kantor Induk/UP</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#FAC775"></div> Organizational Unit</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#9FE1CB"></div> Atasan</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#d0cdc7"></div> Pegawai</div>
+  </div>
+
+  <div class="tree-wrap">
+    <div id="tree-container" class="state-msg">Pilih Unit Layanan dan Kantor Induk/UP untuk menampilkan struktur organisasi.</div>
+  </div>
+
+</div>
+
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTdx_0oA1EIY2PpzNcf1EYbjJ6XhNRGbHff86rr1DFZsJhP_xUrE3XaATeCMHhkvR4lPngfpdiw04cV/pub?output=csv";
+let allData = [];
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (!lines.length) return [];
+  const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g,'').trim());
+  return lines.slice(1).map(line => {
+    const vals = []; let cur = '', inQ = false;
+    for (const c of line) {
+      if (c === '"') { inQ = !inQ; }
+      else if (c === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+      else cur += c;
+    }
+    vals.push(cur.trim());
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (vals[i]||'').replace(/^"|"$/g,'').trim());
+    return obj;
+  });
+}
+
+function findCol(row, ...kws) {
+  const keys = Object.keys(row);
+  for (const kw of kws) {
+    const f = keys.find(k => k.toLowerCase().includes(kw.toLowerCase()));
+    if (f) return row[f] || '';
+  }
+  return '';
+}
+
+function mapRow(r) {
+  const keys = Object.keys(r);
+  // Exact match "Organizational Unit" first, then fallback partial match, then column G (index 6)
+  const ouKey = keys.find(k => k.trim() === 'Organizational Unit')
+             || keys.find(k => k.toLowerCase().includes('organizational unit'))
+             || keys.find(k => k.toLowerCase().includes('organizational'))
+             || keys.find(k => k.toLowerCase().includes('org unit'));
+  const orgUnit = ouKey ? (r[ouKey]||'').trim() : (Object.values(r)[6]||'').trim();
+  return {
+    jabatan: findCol(r, 'Position', 'position', 'jabatan'),
+    nama:    findCol(r, 'Full Name', 'full name', 'nama', 'name'),
+    nip:     findCol(r, 'Prev.Per.No', 'prev.per', 'nip', 'pers'),
+    peg:     findCol(r, 'PeG', 'peg'),
+    unit:    findCol(r, 'Unit Layanan', 'unit layanan', 'unit'),
+    lokasi:  findCol(r, 'Kantor Induk/UP', 'kantor induk', 'kantor', 'lokasi', 'up'),
+    atasan:  findCol(r, 'Nama Atasan', 'nama atasan', 'atasan', 'supervisor'),
+    orgUnit: orgUnit,
+  };
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function tr(s, n) { s=s||'—'; return s.length>n ? s.slice(0,n)+'…':s; }
+function uniq(arr) { return [...new Set(arr.filter(Boolean))].sort(); }
+
+function pegTag(peg) {
+  if (!peg) return '';
+  return `<span class="peg-tag">PeG ${esc(peg)}</span>`;
+}
+
+function nodeEl(cls, row1, row2, peg, title) {
+  return `<div class="node ${cls}" title="${esc(title||row1||'')}">
+    <div class="node-row1">${esc(tr(row1,26))}</div>
+    <div class="node-row2">${esc(tr(row2,24))}${pegTag(peg)}</div>
+  </div>`;
+}
+
+function buildTree(unit, kantor) {
+  const rows = allData.filter(d =>
+    d.unit === unit && (kantor === '__all__' || d.lokasi === kantor)
+  );
+  if (!rows.length) return '<div class="state-msg">Tidak ada data untuk pilihan ini.</div>';
+
+  const kantorList = kantor === '__all__'
+    ? uniq(rows.map(d => d.lokasi))
+    : [kantor];
+
+  let html = `<div style="display:inline-block;min-width:max-content">`;
+
+  // Level 1: Unit Layanan + Kantor sejajar horizontal
+  html += `<div style="display:flex;flex-direction:row;align-items:flex-start">`;
+  html += nodeEl('n-unit', unit, `${rows.length} pegawai`, '', unit);
+  html += `<div class="h-line" style="margin-top:22px"></div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:0">`;
+
+  kantorList.forEach((lok, ki) => {
+    const lokRows = rows.filter(d => d.lokasi === lok);
+
+    html += `<div style="display:flex;flex-direction:column;margin-bottom:${ki < kantorList.length-1 ? '2rem':'0'}">`;
+    html += nodeEl('n-kantor', lok, `${lokRows.length} pegawai`, '', lok);
+
+    // Kumpulkan semua atasan unik di level Kantor (bukan per Org Unit)
+    // Satu atasan hanya muncul SEKALI di seluruh kantor
+    const seenAtasan = new Set();
+    const atasanMap = {}; // atasan -> { orgUnit, jabatan, peg, pegawai[] }
+
+    lokRows.forEach(peg => {
+      const at = peg.atasan || '(Tanpa Atasan)';
+      const ou = peg.orgUnit || '(Org Unit)';
+      if (!atasanMap[at]) {
+        atasanMap[at] = { orgUnit: ou, pegawai: [] };
+      }
+      atasanMap[at].pegawai.push(peg);
+    });
+
+    // Group: orgUnit -> list atasan (urut, tidak duplikat)
+    const ouAtas = {}; // orgUnit -> [atasan, ...]
+    const processedAtasan = new Set();
+
+    // Tentukan Org Unit tiap atasan berdasarkan mayoritas pegawainya
+    Object.entries(atasanMap).forEach(([at, info]) => {
+      const ou = info.orgUnit;
+      if (!ouAtas[ou]) ouAtas[ou] = [];
+      ouAtas[ou].push(at);
+    });
+
+    const ouList = uniq(lokRows.map(d => d.orgUnit));
+
+    html += `<div class="v-block">`;
+    ouList.forEach(ou => {
+      const ouRows = lokRows.filter(d => (d.orgUnit||'') === ou);
+      // Atasan yang belongs to this org unit dan belum ditampilkan
+      const atasanHere = uniq(ouRows.map(d => d.atasan||'(Tanpa Atasan)'))
+        .filter(at => !processedAtasan.has(at));
+
+      if (atasanHere.length === 0) return;
+
+      html += `<div class="v-item"><div class="v-item-body">`;
+
+      // Org Unit ──── Atasan (sejajar)
+      html += `<div style="display:flex;flex-direction:row;align-items:flex-start">`;
+      html += nodeEl('n-ou', ou, `${ouRows.length} pegawai`, '', ou);
+      html += `<div class="h-line" style="margin-top:22px"></div>`;
+      html += `<div style="display:flex;flex-direction:column;gap:0">`;
+
+      atasanHere.forEach(at => {
+        processedAtasan.add(at); // tandai sudah ditampilkan
+        const atData = allData.find(d => d.nama === at);
+        const atJab  = atData ? atData.jabatan : '';
+        const atPeg  = atData ? atData.peg : '';
+        // Semua pegawai milik atasan ini (dari seluruh kantor, bukan hanya ou ini)
+        const atRows = atasanMap[at] ? atasanMap[at].pegawai : [];
+
+        html += `<div class="atasan-group">`;
+        html += `<div class="node n-atasan" title="${esc(at)}">
+          <div class="node-row1">${esc(tr(atJab||'(Jabatan)',26))}</div>
+          <div class="node-row2">${esc(tr(at,24))}${pegTag(atPeg)}</div>
+        </div>`;
+
+        html += `<div class="v-block">`;
+        atRows.forEach(peg => {
+          html += `<div class="v-item"><div class="v-item-body">`;
+          html += `<div class="node n-pegawai" title="${esc(peg.nama)}">
+            <div class="node-row1">${esc(tr(peg.jabatan||'(Jabatan)',26))}</div>
+            <div class="node-row2">${esc(tr(peg.nama,24))}${pegTag(peg.peg)}</div>
+          </div>`;
+          html += `</div></div>`;
+        });
+        html += `</div>`; // v-block pegawai
+        html += `</div>`; // atasan-group
+      });
+
+      html += `</div>`; // atasan column
+      html += `</div>`; // ou + atasan row
+      html += `</div></div>`; // v-item-body + v-item
+    });
+    html += `</div>`; // v-block ou
+    html += `</div>`; // kantor block
+  });
+
+  html += `</div>`; // kantor column
+  html += `</div>`; // unit + kantor row
+  html += `</div>`; // root
+  return html;
+}
+
+function render() {
+  const unit   = document.getElementById('f-unit').value;
+  const kantor = document.getElementById('f-kantor').value;
+  const cont   = document.getElementById('tree-container');
+  const badge  = document.getElementById('count-badge');
+
+  if (!unit) {
+    cont.className = 'state-msg';
+    cont.innerHTML = 'Pilih Unit Layanan dan Kantor Induk/UP untuk menampilkan struktur organisasi.';
+    badge.style.display = 'none'; return;
+  }
+  if (!kantor) {
+    cont.className = 'state-msg';
+    cont.innerHTML = 'Pilih Kantor Induk/UP untuk menampilkan struktur organisasi.';
+    badge.style.display = 'none'; return;
+  }
+
+  const rows = allData.filter(d =>
+    d.unit === unit && (kantor === '__all__' || d.lokasi === kantor)
+  );
+  badge.textContent = `${rows.length} pegawai`;
+  badge.style.display = 'inline-block';
+  cont.className = '';
+  cont.innerHTML = buildTree(unit, kantor);
+}
+
+function updateKantor(unit) {
+  const sel = document.getElementById('f-kantor');
+  if (!unit) {
+    sel.innerHTML = '<option value="">— Pilih Kantor Induk/UP —</option>';
+    sel.disabled = true; return;
+  }
+  const list = uniq(allData.filter(d => d.unit === unit).map(d => d.lokasi));
+  sel.innerHTML = '<option value="">— Pilih Kantor Induk/UP —</option>' +
+    (list.length > 1 ? `<option value="__all__">Semua Kantor (${list.length})</option>` : '') +
+    list.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
+  sel.disabled = false;
+}
+
+
+function dedupData(data) {
+  const seen = new Set();
+  return data.filter(d => {
+    // Key: kombinasi nama + NIP (lowercase, trim)
+    const key = (d.nama||"").toLowerCase().trim() + "|" + (d.nip||"").toLowerCase().trim();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+async function loadData() {
+  try {
+    const resp = await fetch(CSV_URL);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    allData = parseCSV(text).map(mapRow).filter(d => d.nama || d.jabatan)
+    allData = dedupData(allData);
+
+    document.getElementById('subtitle').textContent =
+      `${allData.length} pegawai · Data real-time dari Google Sheets`;
+
+    const units = uniq(allData.map(d => d.unit));
+    const selU  = document.getElementById('f-unit');
+    selU.innerHTML = '<option value="">— Pilih Unit Layanan —</option>' +
+      units.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
+
+    selU.addEventListener('change', () => {
+      updateKantor(selU.value);
+      document.getElementById('f-kantor').value = '';
+      render();
+    });
+    document.getElementById('f-kantor').addEventListener('change', render);
+
+  } catch (err) {
+    document.getElementById('tree-container').innerHTML =
+      '<div class="state-msg">Gagal memuat data. Pastikan Google Sheet sudah dipublish ke web.</div>';
+    document.getElementById('subtitle').textContent = 'Gagal memuat data';
+    console.error(err);
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>

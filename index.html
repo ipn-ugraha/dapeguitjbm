@@ -512,13 +512,25 @@ function renderCharts() {
   renderBar('chart-lokasi', lokasiCount, 7, '#0F6E56');
 }
 
+
+function dedupData(data) {
+  const seen = new Set();
+  return data.filter(d => {
+    // Key: kombinasi nama + NIP (lowercase, trim)
+    const key = (d.nama||"").toLowerCase().trim() + "|" + (d.nip||"").toLowerCase().trim();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 async function loadData() {
   try {
     const resp = await fetch(CSV_URL);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const text = await resp.text();
     const raw  = parseCSV(text);
-    allData    = raw.map(mapRow).filter(d => d.nama || d.jabatan);
+    allData    = raw.map(mapRow).filter(d => d.nama || d.jabatan)
+    allData = dedupData(allData);
     filtered   = [...allData];
 
     document.getElementById('subtitle').textContent =
