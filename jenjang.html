@@ -925,8 +925,8 @@ function buildHierNode(d, level) {
   const bw = getBawahan(d.nama);
   const hasBawahan = bw.length > 0;
   const toggle = hasBawahan ? `<span class="hier-node-toggle" id="tog-${id}">▸</span>` : "";
-  const jabTr = (d.jabatan||"—").length > 22 ? (d.jabatan||"—").slice(0,22)+"…" : (d.jabatan||"—");
-  const namaTr = (d.nama||"—").length > 20 ? (d.nama||"—").slice(0,20)+"…" : (d.nama||"—");
+  const jabTr  = (d.jabatan||"—").length > 24 ? (d.jabatan||"—").slice(0,24)+"…" : (d.jabatan||"—");
+  const namaTr = (d.nama||"—").length > 18 ? (d.nama||"—").slice(0,18)+"…" : (d.nama||"—");
   const pegHtml = d.peg ? `<span class="hier-node-peg">PeG ${d.peg}</span>` : "";
 
   let html = `<div class="hier-node ${hierNodeClass(level)}" title="${d.jabatan} · ${d.nama}"
@@ -934,7 +934,7 @@ function buildHierNode(d, level) {
     ${toggle}
     <div class="hier-node-jab">${jabTr}</div>
     <div class="hier-node-row2">
-      <span class="hier-node-nama">${namaTr}</span>
+      <span class="hier-node-nama" title="${d.nama}">${namaTr}</span>
       ${pegHtml}
     </div>
   </div>`;
