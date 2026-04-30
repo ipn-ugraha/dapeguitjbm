@@ -332,7 +332,16 @@ function renderTable() {
   tbody.innerHTML = html;
 
   const total = filtered.length;
-  document.getElementById("pager-info").textContent = `${start+1}–${Math.min(end,total)} dari ${total} pegawai`;
+  // Hitung total bawahan dari semua filtered (untuk info pegawai keseluruhan)
+  let totalBawahan = 0;
+  filtered.forEach(d => {
+    const bw1 = getBawahan(d.nama);
+    totalBawahan += bw1.length;
+    bw1.forEach(b => { totalBawahan += getBawahan(b.nama).length; });
+  });
+  const totalTampil = total + totalBawahan;
+  document.getElementById("pager-info").textContent = 
+    `${start+1}–${Math.min(end,total)} dari ${total} pegawai jenjang · ${totalTampil} total tampil`;
   document.getElementById("btn-prev").disabled = page === 0;
   document.getElementById("btn-next").disabled = end >= total;
 }
