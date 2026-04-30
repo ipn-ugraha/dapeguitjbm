@@ -721,7 +721,7 @@ function buildHierarki() {
   const topLevel = rows.filter(d => !d.atasan || !allNames.has(d.atasan));
   const hId = { n: 0 };
 
-  function buildNode(person, level) {
+  function buildNode(person, level, allD) {
     const id = "hnode-" + (++hId.n);
     const children = rows.filter(d => d.atasan === person.nama && d.nama !== person.nama);
     const hasChildren = children.length > 0;
@@ -738,7 +738,7 @@ function buildHierarki() {
 
     if (hasChildren) {
       html += `<div class="h-children hidden" id="${id}-children">`;
-      children.forEach(c => { html += buildNode(c, level + 1); });
+      children.forEach(c => { html += buildNode(c, level + 1, allD); });
       html += `</div>`;
     }
     html += `</div>`;
@@ -746,7 +746,7 @@ function buildHierarki() {
   }
 
   let html = "<div class='h-tree'>";
-  topLevel.forEach(p => { html += buildNode(p, 1); });
+  topLevel.forEach(p => { html += buildNode(p, 1, rows); });
   html += "</div>";
   container.innerHTML = html;
 }
@@ -899,7 +899,7 @@ function renderHierarchy() {
   cont.className = "";
   let html = `<div class="hier-tree"><div style="display:flex;flex-direction:column;gap:12px">`;
   roots.forEach(r => {
-    html += buildHierNode(r, 0, rows);
+    html += buildHierNode(r, 1, rows);
   });
   html += `</div></div>`;
   cont.innerHTML = html;
