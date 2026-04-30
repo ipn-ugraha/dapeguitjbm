@@ -791,12 +791,7 @@ async function loadData() {
     const selU = document.getElementById("f-unit");
     selU.innerHTML = "<option value=\"\">Semua Unit Layanan</option>" +
       unitList.map(u => `<option value="${u}">${u}</option>`).join("");
-    // Populate hierarki unit filter
     populateHKantor();
-    // Populate hierarki unit filter
-    // h-unit removed
-    hSelU.innerHTML = "<option value=\"\">Semua Unit Layanan</option>" +
-      unitList.map(u => `<option value="${u}">${u}</option>`).join("");
 
     const jenjangList = [...new Set(allData.map(d => d.jenjang).filter(Boolean))].sort();
     buildJenjangTags(jenjangList);
