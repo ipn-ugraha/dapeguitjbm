@@ -794,7 +794,7 @@ async function loadData() {
     // Populate hierarki unit filter
     populateHKantor();
     // Populate hierarki unit filter
-    const hSelU = document.getElementById("h-unit");
+    // h-unit removed
     hSelU.innerHTML = "<option value=\"\">Semua Unit Layanan</option>" +
       unitList.map(u => `<option value="${u}">${u}</option>`).join("");
 
@@ -862,109 +862,7 @@ function toggleHier(nodeId) {
   if (ti) ti.textContent = isCollapsed ? "▸" : "▾";
 }
 
-function renderHierarchy() {
-  const unit   = document.getElementById("h-unit").value;
-  const lokasi = document.getElementById("h-lokasi").value;
-  const cont   = document.getElementById("hier-container");
 
-  if (!unit && !lokasi) {
-    cont.className = "h-state-msg";
-    cont.innerHTML = "Pilih Unit dan Lokasi untuk menampilkan hierarki.";
-    return;
-  }
-
-  const rows = allData.filter(d => {
-    if (unit   && d.unit   !== unit)   return false;
-    if (lokasi && d.lokasi !== lokasi) return false;
-    return true;
-  });
-
-  if (!rows.length) {
-    cont.className = "h-state-msg";
-    cont.innerHTML = "Tidak ada data untuk pilihan ini.";
-    return;
-  }
-
-  // Cari root nodes: pegawai yang atasannya tidak ada di rows ini
-  const namaSet = new Set(rows.map(d => d.nama));
-  const roots   = rows.filter(d => !d.atasan || !namaSet.has(d.atasan));
-
-  cont.className = "";
-  let html = `<div class="hier-tree"><div style="display:flex;flex-direction:column;gap:12px">`;
-  roots.forEach(r => {
-    html += buildHierNode(r, 1, rows);
-  });
-  html += `</div></div>`;
-  cont.innerHTML = html;
-}
-
-function updateHLokasi(unit) {
-  const sel = document.getElementById("h-lokasi");
-  if (!unit) { sel.innerHTML = "<option value=\"\">— Pilih Unit dulu —</option>"; sel.disabled = true; return; }
-  const list = [...new Set(allData.filter(d => d.unit === unit).map(d => d.lokasi).filter(Boolean))].sort();
-  sel.innerHTML = "<option value=\"\">Semua Lokasi</option>" + list.map(l => `<option value="${l}">${l}</option>`).join("");
-  sel.disabled = false;
-}
-
-document.getElementById("h-unit").addEventListener("change", () => {
-  updateHLokasi(document.getElementById("h-unit").value);
-  document.getElementById("h-lokasi").value = "";
-  renderHierarchy();
-});
-document.getElementById("h-lokasi").addEventListener("change", renderHierarchy);
-
-// ── HIERARKI TAB ──
-let hierNodeCounter = 0;
-
-function hierNodeClass(level) {
-  const classes = ["hn-l1","hn-l2","hn-l3","hn-l4","hn-l5"];
-  return classes[Math.min(level-1, classes.length-1)];
-}
-
-// duplicate buildHierNode removed
-
-function renderHier() {
-  const unit   = document.getElementById("h-unit").value;
-  const lokasi = document.getElementById("h-lokasi").value;
-  const cont   = document.getElementById("hier-container");
-
-  if (!unit) {
-    cont.className = "hier-empty";
-    cont.innerHTML = "Pilih Unit Layanan untuk menampilkan hierarki.";
-    return;
-  }
-
-  const rows = allData.filter(d =>
-    d.unit === unit && (!lokasi || d.lokasi === lokasi)
-  );
-  if (!rows.length) {
-    cont.className = "hier-empty";
-    cont.innerHTML = "Tidak ada data untuk pilihan ini.";
-    return;
-  }
-
-  // Cari root nodes: pegawai yang atasannya tidak ada di dataset ini
-  const namaSet = new Set(rows.map(d => d.nama));
-  const roots = rows.filter(d => !d.atasan || !namaSet.has(d.atasan));
-
-  hierNodeCounter = 0;
-  cont.className = "hier-tree";
-  let html = "";
-  roots.forEach(r => {
-    html += `<div class="hier-row">`;
-    html += buildHierNode(r, 1, rows);
-    html += `</div>`;
-  });
-  cont.innerHTML = html || "<div class='hier-empty'>Tidak ada data hierarki.</div>";
-}
-
-function updateHierLokasi(unit) {
-  const sel = document.getElementById("h-lokasi");
-  if (!unit) { sel.innerHTML = "<option value=''>— Pilih Unit dulu —</option>"; sel.disabled = true; return; }
-  const list = [...new Set(allData.filter(d => d.unit === unit).map(d => d.lokasi).filter(Boolean))].sort();
-  sel.innerHTML = "<option value=''>Semua Lokasi</option>" + list.map(l => `<option value="${l}">${l}</option>`).join("");
-  sel.disabled = false;
-}
 
 // Tab switching
 document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -988,12 +886,7 @@ document.getElementById("btn-reset-peg").addEventListener("click", () => {
 document.getElementById("btn-prev-peg").addEventListener("click", () => { if (pagePeg > 0) { pagePeg--; renderPegTable(); } });
 document.getElementById("btn-next-peg").addEventListener("click", () => { if ((pagePeg+1)*PER_PAGE_PEG < filteredPeg.length) { pagePeg++; renderPegTable(); } });
 
-document.getElementById("h-unit").addEventListener("change", () => {
-  updateHierLokasi(document.getElementById("h-unit").value);
-  document.getElementById("h-lokasi").value = "";
-  renderHier();
-});
-document.getElementById("h-lokasi").addEventListener("change", renderHier);
+
 
 document.getElementById("f-unit").addEventListener("change", () => {
   updateLokasiFilter(document.getElementById("f-unit").value);
