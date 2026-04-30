@@ -100,20 +100,42 @@
     .pager-btn:hover:not(:disabled) { background: var(--surface2); }
     .pager-btn:disabled { opacity: 0.35; cursor: default; }
     .empty-row td, .loading-row td { text-align: center; padding: 2.5rem; color: var(--text-hint); }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; margin-bottom: 1.25rem; background: var(--surface2); border-radius: var(--radius); padding: 4px; width: fit-content; }
+    .tab-btn { font-family: "DM Sans", sans-serif; font-size: 13px; font-weight: 500; padding: 7px 18px; border-radius: var(--radius-sm); border: none; background: transparent; color: var(--text-sec); cursor: pointer; }
+    .tab-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Collapsible rows */
+    .row-main { cursor: pointer; }
+    .row-main td:first-child::before { content: "▾ "; font-size: 10px; color: var(--accent); }
+    .row-main.collapsed td:first-child::before { content: "▸ "; }
+    .row-child { transition: opacity 0.15s; }
+    .row-child.hidden { display: none; }
   </style>
 </head>
 <body>
 <div class="page">
   <div class="page-header">
     <div>
-      <div class="page-title">Data Pegawai per Jenjang</div>
+      <div class="page-title">Data Pegawai per Jenjang & PeG</div>
       <div class="page-sub" id="subtitle">Memuat data...</div>
     </div>
     <div class="source-badge"><span class="dot"></span> Google Sheets · Live</div>
   </div>
 
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="jenjang">Per Jenjang</button>
+    <button class="tab-btn" data-tab="peg">Per PeG</button>
+  </div>
+
   <div class="stat-grid" id="stats"></div>
 
+  <!-- Tab Jenjang -->
+  <div class="tab-panel active" id="panel-jenjang">
   <div class="controls">
     <div class="filter-row">
       <select id="f-unit"><option value="">Semua Unit Layanan</option></select>
@@ -132,14 +154,14 @@
       <table>
         <thead>
           <tr>
-            <th style="width:36px">#</th>
+            <th style="width:50px">#</th>
             <th data-col="unit">Unit</th>
             <th data-col="lokasi">Lokasi</th>
-            <th data-col="atasan">Atasan</th>
             <th data-col="jabatan">Jabatan</th>
             <th data-col="nama">Nama</th>
             <th data-col="nip">NIP</th>
             <th data-col="peg" style="width:50px">PeG</th>
+            <th data-col="atasan">Atasan</th>
           </tr>
         </thead>
         <tbody id="tbl-body">
@@ -155,6 +177,47 @@
       </div>
     </div>
   </div>
+  </div><!-- end panel-jenjang -->
+
+  <!-- Tab PeG -->
+  <div class="tab-panel" id="panel-peg">
+  <div class="controls">
+    <div class="peg-tags" id="peg-tags">
+      <button class="j-tag j-tag-all active" data-val="">Semua PeG</button>
+    </div>
+    <input type="text" id="search-peg" placeholder="Cari nama, NIP, jabatan..." />
+    <button class="btn-reset" id="btn-reset-peg">Reset</button>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px">#</th>
+            <th>Unit</th>
+            <th>Lokasi</th>
+            <th>Jabatan</th>
+            <th>Nama</th>
+            <th>NIP</th>
+            <th style="width:50px">PeG</th>
+            <th>Atasan</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body-peg">
+          <tr class="loading-row"><td colspan="8">Memuat data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span id="pager-info-peg">—</span>
+      <div class="pager-btns">
+        <button class="pager-btn" id="btn-prev-peg" disabled>&#8592; Prev</button>
+        <button class="pager-btn" id="btn-next-peg" disabled>Next &#8594;</button>
+      </div>
+    </div>
+  </div>
+  </div><!-- end panel-peg -->
+
 </div>
 
 <script>
@@ -257,7 +320,7 @@ function getBawahan(nama) {
   return allData.filter(d => d.atasan === nama && d.nama !== nama);
 }
 
-function renderBawahanRows(pegawai, level, parentIsLast, shownNames) {
+function renderBawahanRows(pegawai, level, parentIsLast, shownNames, groupId, parentNum) {
   const bawahan = getBawahan(pegawai.nama);
   let html = "";
   bawahan.forEach((b, bi) => {
@@ -270,11 +333,11 @@ function renderBawahanRows(pegawai, level, parentIsLast, shownNames) {
     const paddingLeft = 14 + (level * 18);
     const lvClass = level === 1 ? "row-lv2" : "row-lv3";
 
-    html += `<tr class="${lvClass}">
-      <td></td>
+    const subNum = parentNum ? `${parentNum}.${bi+1}` : `${bi+1}`;
+    html += `<tr class="${lvClass} row-child" data-group="${groupId}">
+      <td style="color:var(--text-hint);font-family:'DM Mono',monospace;font-size:11px">${subNum}</td>
       <td title="${b.unit}" style="font-size:12px">${b.unit||"—"}</td>
       <td title="${b.lokasi}" style="font-size:12px">${b.lokasi||"—"}</td>
-      <td></td>
       <td><span class="pill pill-bawahan" title="${b.jabatan}">${b.jabatan||"—"}</span></td>
       <td>
         <div class="bawahan-indent" style="padding-left:${paddingLeft}px">
@@ -284,10 +347,11 @@ function renderBawahanRows(pegawai, level, parentIsLast, shownNames) {
       </td>
       <td class="nip-mono" style="font-size:11px">${b.nip||"—"}</td>
       <td style="text-align:center;font-size:11px">${b.peg||"—"}</td>
+      <td style="color:var(--text-hint);font-size:11px">${b.atasan||"—"}</td>
     </tr>`;
 
     if (level < 3) {
-      html += renderBawahanRows(b, level + 1, isLast, shownNames);
+      html += renderBawahanRows(b, level + 1, isLast, shownNames, groupId, subNum);
     }
   });
   return html;
@@ -314,19 +378,20 @@ function renderTable() {
     const isLast = i === rows.length - 1;
 
     // Main row (level 1)
-    html += `<tr class="row-main">
+    const groupId = `grp-${start+i}`;
+    html += `<tr class="row-main" data-group="${groupId}" onclick="toggleGroup('${groupId}', this)">
       <td style="color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">${start+i+1}</td>
       <td title="${d.unit}">${d.unit||"—"}</td>
       <td title="${d.lokasi}">${d.lokasi||"—"}</td>
-      <td title="${d.atasan}" style="color:var(--text-sec)">${d.atasan||"—"}</td>
       <td><span class="pill ${pillClass(d.jabatan)}" title="${d.jabatan}">${d.jabatan||"—"}</span></td>
       <td class="name-strong" title="${d.nama}">${d.nama||"—"}</td>
       <td class="nip-mono">${d.nip||"—"}</td>
       <td style="text-align:center;color:var(--text-sec)">${d.peg||"—"}</td>
+      <td style="color:var(--text-sec)">${d.atasan||"—"}</td>
     </tr>`;
 
     // Bawahan level 2 & 3 — skip nama yang sudah tampil di level 1
-    html += renderBawahanRows(d, 1, isLast, shownNames);
+    html += renderBawahanRows(d, 1, isLast, shownNames, groupId, String(start+i+1));
 
     // Separator
     if (!isLast) {
@@ -405,6 +470,85 @@ function updateJenjangCounts(baseFiltered) {
 }
 
 
+// Toggle bawahan rows
+function toggleGroup(groupId, mainRow) {
+  const rows = document.querySelectorAll(`tr.row-child[data-group="${groupId}"]`);
+  const isCollapsed = mainRow.classList.toggle("collapsed");
+  rows.forEach(r => r.classList.toggle("hidden", isCollapsed));
+}
+
+// PeG tab
+let filteredPeg = [], pagePeg = 0, activePeg = "";
+const PER_PAGE_PEG = 20;
+
+function buildPegTags(list) {
+  const wrap = document.getElementById("peg-tags");
+  wrap.innerHTML = `<button class="j-tag j-tag-all active" data-val="">Semua PeG <span style="font-size:11px;opacity:0.7">${allData.length}</span></button>` +
+    list.map(p => {
+      const cnt = allData.filter(d => d.peg === p).length;
+      return `<button class="j-tag" data-val="${p}">PeG ${p} <span style="font-size:11px;opacity:0.7">${cnt}</span></button>`;
+    }).join("");
+  wrap.querySelectorAll(".j-tag").forEach(btn => {
+    btn.addEventListener("click", () => {
+      wrap.querySelectorAll(".j-tag").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      activePeg = btn.dataset.val;
+      applyPegFilter();
+    });
+  });
+}
+
+function applyPegFilter() {
+  const search = document.getElementById("search-peg").value.toLowerCase().trim();
+  filteredPeg = allData.filter(d => {
+    if (activePeg && d.peg !== activePeg) return false;
+    if (search) {
+      const hay = [d.jabatan, d.nama, d.nip, d.unit, d.lokasi, d.atasan, d.peg].join(" ").toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+  pagePeg = 0;
+  renderPegTable();
+}
+
+function renderPegTable() {
+  const start = pagePeg * PER_PAGE_PEG, end = start + PER_PAGE_PEG;
+  const rows  = filteredPeg.slice(start, end);
+  const tbody = document.getElementById("tbl-body-peg");
+  if (!rows.length) {
+    tbody.innerHTML = "<tr class=\"empty-row\"><td colspan=\"8\">Tidak ada data</td></tr>";
+    document.getElementById("pager-info-peg").textContent = "0 data";
+    document.getElementById("btn-prev-peg").disabled = true;
+    document.getElementById("btn-next-peg").disabled = true;
+    return;
+  }
+  // Group by peg value, show sub-rows for same peg
+  const shownPeg = new Set(rows.map(d => (d.nama||"").toLowerCase().trim()));
+  let html = "";
+  rows.forEach((d, i) => {
+    const bawahan = getBawahan(d.nama).filter(b => !shownPeg.has((b.nama||"").toLowerCase().trim()) || true);
+    const groupId = `peg-grp-${start+i}`;
+    html += `<tr class="row-main" data-group="${groupId}" onclick="toggleGroup('${groupId}', this)">
+      <td style="color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">${start+i+1}</td>
+      <td title="${d.unit}">${d.unit||"—"}</td>
+      <td title="${d.lokasi}">${d.lokasi||"—"}</td>
+      <td><span class="pill ${pillClass(d.jabatan)}">${d.jabatan||"—"}</span></td>
+      <td class="name-strong">${d.nama||"—"}</td>
+      <td class="nip-mono">${d.nip||"—"}</td>
+      <td style="text-align:center;font-weight:600;color:var(--accent)">${d.peg||"—"}</td>
+      <td style="color:var(--text-sec)">${d.atasan||"—"}</td>
+    </tr>`;
+    html += renderBawahanRows(d, 1, i===rows.length-1, shownPeg, groupId, String(start+i+1));
+    if (i < rows.length-1) html += `<tr class="row-sep"><td colspan="8"></td></tr>`;
+  });
+  tbody.innerHTML = html;
+  const total = filteredPeg.length;
+  document.getElementById("pager-info-peg").textContent = `${start+1}–${Math.min(end,total)} dari ${total} pegawai`;
+  document.getElementById("btn-prev-peg").disabled = pagePeg === 0;
+  document.getElementById("btn-next-peg").disabled = end >= total;
+}
+
 function dedupData(data) {
   const seen = new Set();
   // Ambil baris terakhir untuk tiap nama (data terbaru dari sheet)
@@ -435,6 +579,12 @@ async function loadData() {
 
     const jenjangList = [...new Set(allData.map(d => d.jenjang).filter(Boolean))].sort();
     buildJenjangTags(jenjangList);
+
+    const pegList = [...new Set(allData.map(d => d.peg).filter(Boolean))].sort((a,b) => Number(a)-Number(b));
+    buildPegTags(pegList);
+    filteredPeg = [...allData];
+    renderPegTable();
+
     renderStats();
     renderTable();
   } catch(err) {
@@ -444,6 +594,28 @@ async function loadData() {
     console.error(err);
   }
 }
+
+// Tab switching
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
+// PeG tab events
+document.getElementById("search-peg").addEventListener("input", applyPegFilter);
+document.getElementById("btn-reset-peg").addEventListener("click", () => {
+  activePeg = "";
+  document.querySelectorAll("#peg-tags .j-tag").forEach(b => b.classList.remove("active"));
+  document.querySelector("#peg-tags .j-tag-all").classList.add("active");
+  document.getElementById("search-peg").value = "";
+  applyPegFilter();
+});
+document.getElementById("btn-prev-peg").addEventListener("click", () => { if (pagePeg > 0) { pagePeg--; renderPegTable(); } });
+document.getElementById("btn-next-peg").addEventListener("click", () => { if ((pagePeg+1)*PER_PAGE_PEG < filteredPeg.length) { pagePeg++; renderPegTable(); } });
 
 document.getElementById("f-unit").addEventListener("change", () => {
   updateLokasiFilter(document.getElementById("f-unit").value);
