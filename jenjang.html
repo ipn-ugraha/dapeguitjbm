@@ -924,15 +924,16 @@ function buildHierNode(d, level) {
   const id = "hn-" + (++hierNodeCounter);
   const bw = getBawahan(d.nama);
   const hasBawahan = bw.length > 0;
-  const toggle = hasBawahan ? `<span class="hier-node-toggle" id="tog-${id}">▸</span>` : "";
+  // toggle is now inline in jabatan row
   const jabTr  = (d.jabatan||"—").length > 24 ? (d.jabatan||"—").slice(0,24)+"…" : (d.jabatan||"—");
   const namaTr = (d.nama||"—").length > 18 ? (d.nama||"—").slice(0,18)+"…" : (d.nama||"—");
   const pegHtml = d.peg ? `<span class="hier-node-peg">PeG ${d.peg}</span>` : "";
 
   let html = `<div class="hier-node ${hierNodeClass(level)}" title="${d.jabatan} · ${d.nama}"
     onclick="toggleHierNode('${id}', this)" id="node-${id}">
-    ${toggle}
-    <div class="hier-node-jab">${jabTr}</div>
+    <div class="hier-node-jab">
+      ${jabTr}${hasBawahan ? `<span class="hier-node-toggle" id="tog-${id}">▸</span>` : ""}
+    </div>
     <div class="hier-node-row2">
       <span class="hier-node-nama" title="${d.nama}">${namaTr}</span>
       ${pegHtml}
