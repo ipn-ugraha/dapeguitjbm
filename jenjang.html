@@ -678,12 +678,16 @@ function renderPegTable() {
 
 function dedupData(data) {
   const seen = new Set();
-  // Ambil baris terakhir untuk tiap nama (data terbaru dari sheet)
-  // Reverse dulu, filter duplikat by nama, reverse balik
+  // Key = nama + NIP: jika nama sama tapi NIP beda = orang berbeda, keduanya tampil
+  // Jika nama + NIP sama = duplikat, ambil baris terakhir (terbaru)
   const reversed = [...data].reverse();
   const deduped = reversed.filter(d => {
-    const key = (d.nama||"").toLowerCase().replace(/\s+/g," ").trim();
-    if (!key) return true; // baris tanpa nama tetap masuk
+    const nama = (d.nama||"").toLowerCase().replace(/\s+/g," ").trim();
+    const nip  = (d.nip||"").trim();
+    if (!nama) return true;
+    // Kalau ada NIP, key = nama+nip (beda NIP = orang beda)
+    // Kalau tidak ada NIP, key = nama saja
+    const key = nip ? `${nama}|${nip}` : nama;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
