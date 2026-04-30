@@ -167,7 +167,7 @@
       border: 0.5px solid transparent;
     }
     .h-node-row:hover { background: var(--surface2); }
-    .h-toggle { font-size: 10px; color: var(--text-hint); width: 14px; flex-shrink: 0; }
+    .h-toggle { font-size: 10px; color: var(--text-hint); flex-shrink: 0; }
     .h-badge {
       font-size: 11px; font-weight: 600;
       padding: 2px 8px; border-radius: 99px;
@@ -830,13 +830,15 @@ function buildHierNode(d, level, allD) {
   const hasBawahan = bawahan.length > 0;
   const nodeId = "hn-" + Math.random().toString(36).slice(2,8);
   const lvCls  = hNodeClass(level);
-  const pegTag = d.peg ? `<span class="h-peg-tag">${d.peg}</span>` : "";
-  const toggleIcon = hasBawahan ? `<span class="h-toggle" id="ti-${nodeId}">▸</span>` : `<span class="h-toggle" style="opacity:0.2">·</span>`;
+  const pegTag = d.peg ? `<span class="h-peg-tag">PeG ${d.peg}</span>` : "";
+  const toggleIcon = hasBawahan ? `<span class="h-toggle" id="ti-${nodeId}">▸</span>` : "";
+  const jabTr  = (d.jabatan||"—").length > 22 ? (d.jabatan||"—").slice(0,22)+"…" : (d.jabatan||"—");
+  const namaTr = (d.nama||"—").length > 18 ? (d.nama||"—").slice(0,18)+"…" : (d.nama||"—");
 
   let html = `<div class="h-node-wrap">`;
   html += `<div class="h-node ${lvCls}" onclick="toggleHier('${nodeId}')" title="${d.jabatan} — ${d.nama}">
-    <div class="h-node-jab">${toggleIcon}${d.jabatan||"—"}</div>
-    <div class="h-node-nama">${d.nama||"—"}${pegTag}</div>
+    <div class="h-node-jab"><span style="flex:1;overflow:hidden;text-overflow:ellipsis">${jabTr}</span>${toggleIcon}</div>
+    <div class="h-node-nama"><span style="flex:1;overflow:hidden;text-overflow:ellipsis">${namaTr}</span>${pegTag}</div>
   </div>`;
 
   if (hasBawahan) {
