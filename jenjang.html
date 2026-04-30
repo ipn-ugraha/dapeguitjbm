@@ -334,7 +334,7 @@ function renderBawahanRows(pegawai, level, parentIsLast, shownNames, groupId, pa
     const lvClass = level === 1 ? "row-lv2" : "row-lv3";
 
     const subNum = parentNum ? `${parentNum}.${bi+1}` : `${bi+1}`;
-    html += `<tr class="${lvClass} row-child" data-group="${groupId}">
+    html += `<tr class="${lvClass} row-child hidden" data-group="${groupId}">
       <td style="color:var(--text-hint);font-family:'DM Mono',monospace;font-size:11px">${subNum}</td>
       <td title="${b.unit}" style="font-size:12px">${b.unit||"—"}</td>
       <td title="${b.lokasi}" style="font-size:12px">${b.lokasi||"—"}</td>
@@ -379,8 +379,14 @@ function renderTable() {
 
     // Main row (level 1)
     const groupId = `grp-${start+i}`;
-    html += `<tr class="row-main" data-group="${groupId}" onclick="toggleGroup('${groupId}', this)">
-      <td style="color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">${start+i+1}</td>
+    const bw1 = getBawahan(d.nama);
+    const bw2 = bw1.reduce((s,b) => s + getBawahan(b.nama).length, 0);
+    const totalBw = bw1.length + bw2;
+    const bwBadge = totalBw > 0
+      ? `<span style="font-size:10px;background:#E6F1FB;color:#0C447C;border-radius:99px;padding:1px 7px;margin-left:6px;font-weight:500">${totalBw}</span>`
+      : "";
+    html += `<tr class="row-main collapsed" data-group="${groupId}" onclick="toggleGroup('${groupId}', this)">
+      <td style="color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">${start+i+1}${bwBadge}</td>
       <td title="${d.unit}">${d.unit||"—"}</td>
       <td title="${d.lokasi}">${d.lokasi||"—"}</td>
       <td><span class="pill ${pillClass(d.jabatan)}" title="${d.jabatan}">${d.jabatan||"—"}</span></td>
@@ -470,7 +476,7 @@ function updateJenjangCounts(baseFiltered) {
 }
 
 
-// Toggle bawahan rows
+// Toggle bawahan rows (default: collapsed/hidden)
 function toggleGroup(groupId, mainRow) {
   const rows = document.querySelectorAll(`tr.row-child[data-group="${groupId}"]`);
   const isCollapsed = mainRow.classList.toggle("collapsed");
@@ -529,8 +535,14 @@ function renderPegTable() {
   rows.forEach((d, i) => {
     const bawahan = getBawahan(d.nama).filter(b => !shownPeg.has((b.nama||"").toLowerCase().trim()) || true);
     const groupId = `peg-grp-${start+i}`;
-    html += `<tr class="row-main" data-group="${groupId}" onclick="toggleGroup('${groupId}', this)">
-      <td style="color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">${start+i+1}</td>
+    const bw1p = getBawahan(d.nama);
+    const bw2p = bw1p.reduce((s,b) => s + getBawahan(b.nama).length, 0);
+    const totalBwP = bw1p.length + bw2p;
+    const bwBadgeP = totalBwP > 0
+      ? `<span style="font-size:10px;background:#E6F1FB;color:#0C447C;border-radius:99px;padding:1px 7px;margin-left:6px;font-weight:500">${totalBwP}</span>`
+      : "";
+    html += `<tr class="row-main collapsed" data-group="${groupId}" onclick="toggleGroup('${groupId}', this)">
+      <td style="color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">${start+i+1}${bwBadgeP}</td>
       <td title="${d.unit}">${d.unit||"—"}</td>
       <td title="${d.lokasi}">${d.lokasi||"—"}</td>
       <td><span class="pill ${pillClass(d.jabatan)}">${d.jabatan||"—"}</span></td>
