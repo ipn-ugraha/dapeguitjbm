@@ -717,16 +717,14 @@ function buildHierarki() {
     const children = rows.filter(d => d.atasan === person.nama && d.nama !== person.nama);
     const hasChildren = children.length > 0;
     const lvClass = `h-lv${Math.min(level, 4)}`;
-    const toggle = hasChildren ? "▸" : "·";
-    const pegBadge = person.peg ? `PeG ${person.peg}` : "";
+    const jabTr  = (person.jabatan||"—").length > 22 ? (person.jabatan||"—").slice(0,22)+"…" : (person.jabatan||"—");
+    const namaTr = (person.nama||"—").length > 20 ? (person.nama||"—").slice(0,20)+"…" : (person.nama||"—");
+    const toggleIcon = hasChildren ? `<span class="h-toggle" id="ti-${id}">▸</span>` : "";
 
     let html = `<div class="h-node ${lvClass}" id="${id}">
       <div class="h-node-row" onclick="toggleHNode('${id}')">
-        <span class="h-toggle">${toggle}</span>
-        ${pegBadge ? `<span class="h-badge">${pegBadge}</span>` : ""}
-        <span class="h-name">${person.nama||"—"}</span>
-        <span class="h-meta">${person.jabatan||""}</span>
-        ${hasChildren ? `<span class="h-meta" style="background:var(--surface2);border-radius:99px;padding:1px 8px">${children.length}</span>` : ""}
+        <div class="h-node-jab"><span style="flex:1;overflow:hidden;text-overflow:ellipsis">${jabTr}</span>${toggleIcon}</div>
+        <div class="h-node-nama">${namaTr}</div>
       </div>`;
 
     if (hasChildren) {
@@ -921,45 +919,7 @@ function hierNodeClass(level) {
   return classes[Math.min(level-1, classes.length-1)];
 }
 
-function buildHierNode(d, level) {
-  const id = "hn-" + (++hierNodeCounter);
-  const bw = getBawahan(d.nama);
-  const hasBawahan = bw.length > 0;
-  // toggle is now inline in jabatan row
-  const jabTr  = (d.jabatan||"—").length > 24 ? (d.jabatan||"—").slice(0,24)+"…" : (d.jabatan||"—");
-  const namaTr = (d.nama||"—").length > 18 ? (d.nama||"—").slice(0,18)+"…" : (d.nama||"—");
-  const pegHtml = d.peg ? `<span class="hier-node-peg">PeG ${d.peg}</span>` : "";
-
-  let html = `<div class="hier-node ${hierNodeClass(level)}" title="${d.jabatan} · ${d.nama}"
-    onclick="toggleHierNode('${id}', this)" id="node-${id}">
-    <div class="hier-node-jab">
-      ${jabTr}${hasBawahan ? `<span class="hier-node-toggle" id="tog-${id}">▸</span>` : ""}
-    </div>
-    <div class="hier-node-row2">
-      <span class="hier-node-nama" title="${d.nama}">${namaTr}</span>
-      ${pegHtml}
-    </div>
-  </div>`;
-
-  if (hasBawahan) {
-    html += `<div class="hier-children hier-hidden" id="children-${id}">`;
-    bw.forEach(b => {
-      html += `<div class="hier-child-item"><div class="hier-child-body">`;
-      html += buildHierNode(b, level + 1);
-      html += `</div></div>`;
-    });
-    html += `</div>`;
-  }
-  return html;
-}
-
-function toggleHierNode(id, nodeEl) {
-  const children = document.getElementById("children-" + id);
-  const tog = document.getElementById("tog-" + id);
-  if (!children) return;
-  const isHidden = children.classList.toggle("hier-hidden");
-  if (tog) tog.textContent = isHidden ? "▸" : "▾";
-}
+// duplicate buildHierNode removed
 
 function renderHier() {
   const unit   = document.getElementById("h-unit").value;
@@ -990,7 +950,7 @@ function renderHier() {
   let html = "";
   roots.forEach(r => {
     html += `<div class="hier-row">`;
-    html += buildHierNode(r, 1);
+    html += buildHierNode(r, 1, rows);
     html += `</div>`;
   });
   cont.innerHTML = html || "<div class='hier-empty'>Tidak ada data hierarki.</div>";
