@@ -101,6 +101,48 @@
     .pager-btn:disabled { opacity: 0.35; cursor: default; }
     .empty-row td, .loading-row td { text-align: center; padding: 2.5rem; color: var(--text-hint); }
 
+    /* Hierarchy tree */
+    .hier-wrap { overflow-x: auto; padding: 1rem 0 2rem; }
+    .hier-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .hier-filters select { font-family: "DM Sans", sans-serif; font-size: 13px; color: var(--text); background: var(--surface); border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); padding: 7px 12px; outline: none; min-width: 180px; flex: 1; }
+    .hier-filters select:disabled { opacity: 0.45; }
+    .hier-tree { display: inline-block; min-width: max-content; }
+    .h-node-wrap { display: flex; flex-direction: row; align-items: flex-start; }
+    .h-node {
+      border-radius: var(--radius-sm);
+      padding: 8px 14px;
+      border: 0.5px solid var(--border-md);
+      min-width: 160px; max-width: 220px;
+      cursor: pointer;
+      user-select: none;
+      transition: box-shadow 0.15s;
+    }
+    .h-node:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .h-node-jab { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .h-node-nama { font-size: 12px; font-weight: 400; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; }
+    .h-peg-tag { font-family: "DM Mono", monospace; font-size: 11px; padding: 1px 6px; border-radius: 4px; flex-shrink: 0; }
+    .h-toggle { font-size: 10px; margin-right: 4px; }
+    /* Node level colors */
+    .h-lv0 { background: #1D9E75; color: #fff; border-color: #0F6E56; }
+    .h-lv0 .h-node-nama { opacity: 0.85; }
+    .h-lv0 .h-peg-tag { background: rgba(255,255,255,0.2); color: #fff; }
+    .h-lv1 { background: #E1F5EE; color: #085041; border-color: #9FE1CB; }
+    .h-lv1 .h-peg-tag { background: #9FE1CB; color: #085041; }
+    .h-lv2 { background: #E6F1FB; color: #0C447C; border-color: #B5D4F4; }
+    .h-lv2 .h-peg-tag { background: #B5D4F4; color: #0C447C; }
+    .h-lv3 { background: #FAEEDA; color: #633806; border-color: #FAC775; }
+    .h-lv3 .h-peg-tag { background: #FAC775; color: #633806; }
+    .h-lvN { background: #F1EFE8; color: #444441; border-color: #D3D1C7; }
+    .h-lvN .h-peg-tag { background: #D3D1C7; color: #444441; }
+    /* Connector lines */
+    .h-line-h { width: 28px; height: 1.5px; background: #ccc9c2; flex-shrink: 0; align-self: center; }
+    .h-children { display: flex; flex-direction: column; border-left: 1.5px solid #ccc9c2; margin-left: 16px; padding: 4px 0; }
+    .h-child-row { display: flex; flex-direction: row; align-items: flex-start; padding: 5px 0; position: relative; }
+    .h-child-row::before { content: ""; position: absolute; left: 0; top: 50%; width: 28px; height: 1.5px; background: #ccc9c2; transform: translateY(-50%); }
+    .h-child-indent { padding-left: 28px; display: flex; flex-direction: column; }
+    .h-children.collapsed { display: none; }
+    .h-state-msg { text-align: center; padding: 3rem; color: var(--text-hint); font-size: 14px; }
+
     /* Tabs */
     .tabs { display: flex; gap: 4px; margin-bottom: 1.25rem; background: var(--surface2); border-radius: var(--radius); padding: 4px; width: fit-content; }
     .tab-btn { font-family: "DM Sans", sans-serif; font-size: 13px; font-weight: 500; padding: 7px 18px; border-radius: var(--radius-sm); border: none; background: transparent; color: var(--text-sec); cursor: pointer; }
@@ -267,6 +309,18 @@
     </div>
     <div id="hierarki-container" style="font-size:13px;color:var(--text-hint);padding:2rem;text-align:center">
       Pilih Unit Layanan untuk menampilkan hierarki.
+    </div>
+  </div><!-- end panel-hierarki -->
+
+
+  <!-- Tab Hierarki -->
+  <div class="tab-panel" id="panel-hierarki">
+    <div class="hier-filters">
+      <select id="h-unit"><option value="">Semua Unit Layanan</option></select>
+      <select id="h-lokasi" disabled><option value="">— Pilih Unit dulu —</option></select>
+    </div>
+    <div class="hier-wrap">
+      <div id="hier-container" class="h-state-msg">Pilih Unit dan Lokasi untuk menampilkan hierarki.</div>
     </div>
   </div><!-- end panel-hierarki -->
 
@@ -747,6 +801,11 @@ async function loadData() {
     filteredPeg = [...allData];
     renderPegTable();
 
+    // Populate hierarchy unit filter
+    const hUnitSel = document.getElementById("h-unit");
+    hUnitSel.innerHTML = "<option value=\"\">Semua Unit Layanan</option>" +
+      unitList.map(u => `<option value="${u}">${u}</option>`).join("");
+
     renderStats();
     renderTable();
   } catch(err) {
@@ -756,6 +815,99 @@ async function loadData() {
     console.error(err);
   }
 }
+
+// ── HIERARCHY TAB ──
+function hNodeClass(level) {
+  const cls = ["h-lv0","h-lv1","h-lv2","h-lv3"];
+  return cls[level] || "h-lvN";
+}
+
+function buildHierNode(d, level, allD) {
+  const bawahan = allD.filter(x => x.atasan === d.nama && x.nama !== d.nama);
+  const hasBawahan = bawahan.length > 0;
+  const nodeId = "hn-" + Math.random().toString(36).slice(2,8);
+  const lvCls  = hNodeClass(level);
+  const pegTag = d.peg ? `<span class="h-peg-tag">${d.peg}</span>` : "";
+  const toggleIcon = hasBawahan ? `<span class="h-toggle" id="ti-${nodeId}">▸</span>` : `<span class="h-toggle" style="opacity:0.2">·</span>`;
+
+  let html = `<div class="h-node-wrap">`;
+  html += `<div class="h-node ${lvCls}" onclick="toggleHier('${nodeId}')" title="${d.jabatan} — ${d.nama}">
+    <div class="h-node-jab">${toggleIcon}${d.jabatan||"—"}</div>
+    <div class="h-node-nama">${d.nama||"—"}${pegTag}</div>
+  </div>`;
+
+  if (hasBawahan) {
+    html += `<div class="h-line-h"></div>`;
+    html += `<div class="h-children collapsed" id="${nodeId}">`;
+    bawahan.forEach(b => {
+      html += `<div class="h-child-row"><div class="h-child-indent">`;
+      html += buildHierNode(b, level + 1, allD);
+      html += `</div></div>`;
+    });
+    html += `</div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function toggleHier(nodeId) {
+  const el = document.getElementById(nodeId);
+  const ti = document.getElementById("ti-" + nodeId);
+  if (!el) return;
+  const isCollapsed = el.classList.toggle("collapsed");
+  if (ti) ti.textContent = isCollapsed ? "▸" : "▾";
+}
+
+function renderHierarchy() {
+  const unit   = document.getElementById("h-unit").value;
+  const lokasi = document.getElementById("h-lokasi").value;
+  const cont   = document.getElementById("hier-container");
+
+  if (!unit && !lokasi) {
+    cont.className = "h-state-msg";
+    cont.innerHTML = "Pilih Unit dan Lokasi untuk menampilkan hierarki.";
+    return;
+  }
+
+  const rows = allData.filter(d => {
+    if (unit   && d.unit   !== unit)   return false;
+    if (lokasi && d.lokasi !== lokasi) return false;
+    return true;
+  });
+
+  if (!rows.length) {
+    cont.className = "h-state-msg";
+    cont.innerHTML = "Tidak ada data untuk pilihan ini.";
+    return;
+  }
+
+  // Cari root nodes: pegawai yang atasannya tidak ada di rows ini
+  const namaSet = new Set(rows.map(d => d.nama));
+  const roots   = rows.filter(d => !d.atasan || !namaSet.has(d.atasan));
+
+  cont.className = "";
+  let html = `<div class="hier-tree"><div style="display:flex;flex-direction:column;gap:12px">`;
+  roots.forEach(r => {
+    html += buildHierNode(r, 0, rows);
+  });
+  html += `</div></div>`;
+  cont.innerHTML = html;
+}
+
+function updateHLokasi(unit) {
+  const sel = document.getElementById("h-lokasi");
+  if (!unit) { sel.innerHTML = "<option value=\"\">— Pilih Unit dulu —</option>"; sel.disabled = true; return; }
+  const list = [...new Set(allData.filter(d => d.unit === unit).map(d => d.lokasi).filter(Boolean))].sort();
+  sel.innerHTML = "<option value=\"\">Semua Lokasi</option>" + list.map(l => `<option value="${l}">${l}</option>`).join("");
+  sel.disabled = false;
+}
+
+document.getElementById("h-unit").addEventListener("change", () => {
+  updateHLokasi(document.getElementById("h-unit").value);
+  document.getElementById("h-lokasi").value = "";
+  renderHierarchy();
+});
+document.getElementById("h-lokasi").addEventListener("change", renderHierarchy);
 
 // Tab switching
 document.querySelectorAll(".tab-btn").forEach(btn => {
