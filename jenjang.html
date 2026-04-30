@@ -112,14 +112,14 @@
       border-radius: var(--radius-sm);
       padding: 9px 14px;
       border: 0.5px solid var(--border-md);
-      min-width: 240px; max-width: 320px; width: 280px;
+      min-width: 480px; max-width: 640px; width: 560px;
       cursor: pointer;
       user-select: none;
       transition: box-shadow 0.15s;
     }
     .h-node:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .h-node-jab { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; }
-    .h-node-nama { font-size: 12px; font-weight: 400; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .h-node-jab { font-size: 13px; font-weight: 600; word-break: break-word; display: flex; align-items: flex-start; gap: 4px; line-height: 1.4; }
+    .h-node-nama { font-size: 12px; font-weight: 400; margin-top: 4px; word-break: break-word; line-height: 1.4; color: inherit; opacity: 0.85; }
     .h-peg-tag { font-family: "DM Mono", monospace; font-size: 11px; padding: 1px 6px; border-radius: 4px; flex-shrink: 0; }
     .h-toggle { font-size: 10px; margin-right: 4px; }
     /* Node level colors */
@@ -717,13 +717,13 @@ function buildHierarki() {
     const children = rows.filter(d => d.atasan === person.nama && d.nama !== person.nama);
     const hasChildren = children.length > 0;
     const lvClass = `h-lv${Math.min(level, 4)}`;
-    const jabTr  = (person.jabatan||"—").length > 32 ? (person.jabatan||"—").slice(0,32)+"…" : (person.jabatan||"—");
-    const namaTr = (person.nama||"—").length > 30 ? (person.nama||"—").slice(0,30)+"…" : (person.nama||"—");
+    const jabTr  = person.jabatan||"—";
+    const namaTr = person.nama||"—";
     const toggleIcon = hasChildren ? `<span class="h-toggle" id="ti-${id}">▸</span>` : "";
 
     let html = `<div class="h-node ${lvClass}" id="${id}">
       <div class="h-node-row" onclick="toggleHNode('${id}')">
-        <div class="h-node-jab"><span style="flex:1;overflow:hidden;text-overflow:ellipsis">${jabTr}</span>${toggleIcon}</div>
+        <div class="h-node-jab"><span style="flex:1">${jabTr}</span>${toggleIcon}</div>
         <div class="h-node-nama">${namaTr}</div>
       </div>`;
 
@@ -829,8 +829,8 @@ function buildHierNode(d, level, allD) {
   const nodeId = "hn-" + Math.random().toString(36).slice(2,8);
   const lvCls  = hNodeClass(level);
   const toggleIcon = hasBawahan ? `<span class="h-toggle" id="ti-${nodeId}">▸</span>` : "";
-  const jabTr  = (d.jabatan||"—").length > 32 ? (d.jabatan||"—").slice(0,32)+"…" : (d.jabatan||"—");
-  const namaTr = (d.nama||"—").length > 30 ? (d.nama||"—").slice(0,30)+"…" : (d.nama||"—");
+  const jabTr  = d.jabatan||"—";
+  const namaTr = d.nama||"—";
 
   let html = `<div class="h-node-wrap">`;
   html += `<div class="h-node ${lvCls}" onclick="toggleHier('${nodeId}')" title="${d.jabatan} — ${d.nama}">
