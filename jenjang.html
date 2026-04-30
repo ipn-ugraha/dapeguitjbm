@@ -830,15 +830,14 @@ function buildHierNode(d, level, allD) {
   const hasBawahan = bawahan.length > 0;
   const nodeId = "hn-" + Math.random().toString(36).slice(2,8);
   const lvCls  = hNodeClass(level);
-  const pegTag = d.peg ? `<span class="h-peg-tag">PeG ${d.peg}</span>` : "";
   const toggleIcon = hasBawahan ? `<span class="h-toggle" id="ti-${nodeId}">▸</span>` : "";
   const jabTr  = (d.jabatan||"—").length > 22 ? (d.jabatan||"—").slice(0,22)+"…" : (d.jabatan||"—");
-  const namaTr = (d.nama||"—").length > 18 ? (d.nama||"—").slice(0,18)+"…" : (d.nama||"—");
+  const namaTr = (d.nama||"—").length > 20 ? (d.nama||"—").slice(0,20)+"…" : (d.nama||"—");
 
   let html = `<div class="h-node-wrap">`;
   html += `<div class="h-node ${lvCls}" onclick="toggleHier('${nodeId}')" title="${d.jabatan} — ${d.nama}">
     <div class="h-node-jab"><span style="flex:1;overflow:hidden;text-overflow:ellipsis">${jabTr}</span>${toggleIcon}</div>
-    <div class="h-node-nama"><span style="flex:1;overflow:hidden;text-overflow:ellipsis">${namaTr}</span>${pegTag}</div>
+    <div class="h-node-nama">${namaTr}</div>
   </div>`;
 
   if (hasBawahan) {
