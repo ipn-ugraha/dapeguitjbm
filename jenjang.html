@@ -491,7 +491,7 @@ function renderTable() {
     const bwBadge = totalBw > 0
       ? `<span style="font-size:10px;background:#E6F1FB;color:#0C447C;border-radius:99px;padding:1px 7px;margin-left:6px;font-weight:500">${totalBw}</span>`
       : "";
-    html += `<tr class="row-main collapsed" data-group="${groupId}" onclick="toggleGroup('${groupId}', this)">
+    html += `<tr class="row-main collapsed" data-group="${groupId}" data-clickable="true">
       <td style="color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">${start+i+1}${bwBadge}</td>
       <td title="${d.unit}">${d.unit||"—"}</td>
       <td title="${d.lokasi}">${d.lokasi||"—"}</td>
@@ -589,6 +589,15 @@ function toggleGroup(groupId, mainRow) {
   rows.forEach(r => r.classList.toggle("hidden", isCollapsed));
 }
 
+// Event delegation for row-main clicks (handles clicks on child elements too)
+document.addEventListener("click", function(e) {
+  const tr = e.target.closest("tr.row-main");
+  if (!tr) return;
+  const groupId = tr.dataset.group;
+  if (!groupId) return;
+  toggleGroup(groupId, tr);
+});
+
 // PeG tab
 let filteredPeg = [], pagePeg = 0, activePeg = "";
 const PER_PAGE_PEG = 20;
@@ -647,7 +656,7 @@ function renderPegTable() {
     const bwBadgeP = totalBwP > 0
       ? `<span style="font-size:10px;background:#E6F1FB;color:#0C447C;border-radius:99px;padding:1px 7px;margin-left:6px;font-weight:500">${totalBwP}</span>`
       : "";
-    html += `<tr class="row-main collapsed" data-group="${groupId}" onclick="toggleGroup('${groupId}', this)">
+    html += `<tr class="row-main collapsed" data-group="${groupId}" data-clickable="true">
       <td style="color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">${start+i+1}${bwBadgeP}</td>
       <td title="${d.unit}">${d.unit||"—"}</td>
       <td title="${d.lokasi}">${d.lokasi||"—"}</td>
