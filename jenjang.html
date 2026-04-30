@@ -257,16 +257,19 @@ function getBawahan(nama) {
   return allData.filter(d => d.atasan === nama && d.nama !== nama);
 }
 
-function renderBawahanRows(pegawai, level, parentIsLast) {
+function renderBawahanRows(pegawai, level, parentIsLast, shownNames) {
   const bawahan = getBawahan(pegawai.nama);
   let html = "";
   bawahan.forEach((b, bi) => {
+    // Skip jika nama sudah tampil di level 1
+    const namaKey = (b.nama||"").toLowerCase().replace(/\s+/g," ").trim();
+    if (shownNames.has(namaKey)) return;
+
     const isLast = bi === bawahan.length - 1;
-    const indent = "  ".repeat(level);
     const prefix = isLast ? "└" : "├";
     const paddingLeft = 14 + (level * 18);
-
     const lvClass = level === 1 ? "row-lv2" : "row-lv3";
+
     html += `<tr class="${lvClass}">
       <td></td>
       <td title="${b.unit}" style="font-size:12px">${b.unit||"—"}</td>
@@ -283,9 +286,8 @@ function renderBawahanRows(pegawai, level, parentIsLast) {
       <td style="text-align:center;font-size:11px">${b.peg||"—"}</td>
     </tr>`;
 
-    // Level 3: bawahan dari bawahan (rekursif sampai level 3)
     if (level < 3) {
-      html += renderBawahanRows(b, level + 1, isLast);
+      html += renderBawahanRows(b, level + 1, isLast, shownNames);
     }
   });
   return html;
@@ -304,6 +306,9 @@ function renderTable() {
     return;
   }
 
+  // Kumpulkan semua nama di level 1 untuk mencegah tampil duplikat di level 2/3
+  const shownNames = new Set(rows.map(d => (d.nama||"").toLowerCase().replace(/\s+/g," ").trim()));
+
   let html = "";
   rows.forEach((d, i) => {
     const isLast = i === rows.length - 1;
@@ -320,8 +325,8 @@ function renderTable() {
       <td style="text-align:center;color:var(--text-sec)">${d.peg||"—"}</td>
     </tr>`;
 
-    // Bawahan level 2 & 3
-    html += renderBawahanRows(d, 1, isLast);
+    // Bawahan level 2 & 3 — skip nama yang sudah tampil di level 1
+    html += renderBawahanRows(d, 1, isLast, shownNames);
 
     // Separator
     if (!isLast) {
