@@ -114,6 +114,41 @@
     .row-main.collapsed td:first-child::before { content: "▸ "; }
     .row-child { transition: opacity 0.15s; }
     .row-child.hidden { display: none; }
+
+    /* Hierarki tree */
+    .h-tree { padding: 0.5rem 0; }
+    .h-node { display: flex; flex-direction: column; margin: 3px 0; }
+    .h-node-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; border-radius: var(--radius-sm);
+      cursor: pointer; user-select: none;
+      border: 0.5px solid transparent;
+    }
+    .h-node-row:hover { background: var(--surface2); }
+    .h-toggle { font-size: 10px; color: var(--text-hint); width: 14px; flex-shrink: 0; }
+    .h-badge {
+      font-size: 11px; font-weight: 600;
+      padding: 2px 8px; border-radius: 99px;
+      flex-shrink: 0; white-space: nowrap;
+    }
+    .h-name { font-size: 13px; font-weight: 500; flex: 1; }
+    .h-meta { font-size: 11px; color: var(--text-hint); white-space: nowrap; }
+    .h-children { padding-left: 24px; border-left: 1.5px solid var(--border-md); margin-left: 18px; }
+    .h-children.hidden { display: none; }
+
+    /* Level colors for hierarki */
+    .h-lv1 .h-node-row { background: #EAF3DE; border-color: #c5dfab; }
+    .h-lv1 .h-node-row:hover { background: #d5e8c4; }
+    .h-lv1 .h-badge { background: #1D9E75; color: #fff; }
+    .h-lv2 .h-node-row { background: #E6F1FB; border-color: #B5D4F4; }
+    .h-lv2 .h-node-row:hover { background: #cde3f5; }
+    .h-lv2 .h-badge { background: #185FA5; color: #fff; }
+    .h-lv3 .h-node-row { background: #FAEEDA; border-color: #FAC775; }
+    .h-lv3 .h-node-row:hover { background: #f5dfc0; }
+    .h-lv3 .h-badge { background: #633806; color: #fff; }
+    .h-lv4 .h-node-row { background: #fff; border-color: var(--border-md); }
+    .h-lv4 .h-node-row:hover { background: var(--surface2); }
+    .h-lv4 .h-badge { background: var(--gray-bg); color: var(--gray-text); }
   </style>
 </head>
 <body>
@@ -130,6 +165,7 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="jenjang">Per Jenjang</button>
     <button class="tab-btn" data-tab="peg">Per PeG</button>
+    <button class="tab-btn" data-tab="hierarki">Hierarki</button>
   </div>
 
   <div class="stat-grid" id="stats"></div>
@@ -217,6 +253,22 @@
     </div>
   </div>
   </div><!-- end panel-peg -->
+
+  <!-- Tab Hierarki -->
+  <div class="tab-panel" id="panel-hierarki">
+    <div class="controls" style="margin-bottom:1rem">
+      <select id="h-unit" style="font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--bg);border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:7px 12px;outline:none;flex:1;min-width:180px">
+        <option value="">Semua Unit Layanan</option>
+      </select>
+      <select id="h-lokasi" disabled style="font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--bg);border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:7px 12px;outline:none;flex:1;min-width:180px;opacity:0.45">
+        <option value="">— Pilih Unit dulu —</option>
+      </select>
+      <button class="btn-reset" id="h-reset">Reset</button>
+    </div>
+    <div id="hierarki-container" style="font-size:13px;color:var(--text-hint);padding:2rem;text-align:center">
+      Pilih Unit Layanan untuk menampilkan hierarki.
+    </div>
+  </div><!-- end panel-hierarki -->
 
 </div>
 
@@ -575,6 +627,100 @@ function dedupData(data) {
   });
   return deduped.reverse();
 }
+// ── HIERARKI TAB ──
+let hUnit = "", hLokasi = "";
+
+function updateHLokasiFilter(unit) {
+  const sel = document.getElementById("h-lokasi");
+  if (!unit) {
+    sel.innerHTML = "<option value=''>— Pilih Unit dulu —</option>";
+    sel.disabled = true; sel.style.opacity = "0.45"; return;
+  }
+  const list = [...new Set(allData.filter(d => d.unit === unit).map(d => d.lokasi).filter(Boolean))].sort();
+  sel.innerHTML = "<option value=''>Semua Lokasi</option>" + list.map(l => `<option value="${l}">${l}</option>`).join("");
+  sel.disabled = false; sel.style.opacity = "1";
+}
+
+function buildHierarki() {
+  const container = document.getElementById("hierarki-container");
+  if (!hUnit) {
+    container.innerHTML = "<div style='text-align:center;padding:2rem;color:var(--text-hint)'>Pilih Unit Layanan untuk menampilkan hierarki.</div>";
+    return;
+  }
+  const rows = allData.filter(d => d.unit === hUnit && (!hLokasi || d.lokasi === hLokasi));
+  if (!rows.length) {
+    container.innerHTML = "<div style='text-align:center;padding:2rem;color:var(--text-hint)'>Tidak ada data.</div>";
+    return;
+  }
+
+  // Build hierarchy: find top-level (atasan not in dataset names)
+  const allNames = new Set(rows.map(d => d.nama));
+  const topLevel = rows.filter(d => !d.atasan || !allNames.has(d.atasan));
+  const hId = { n: 0 };
+
+  function buildNode(person, level) {
+    const id = "hnode-" + (++hId.n);
+    const children = rows.filter(d => d.atasan === person.nama && d.nama !== person.nama);
+    const hasChildren = children.length > 0;
+    const lvClass = `h-lv${Math.min(level, 4)}`;
+    const toggle = hasChildren ? "▸" : "·";
+    const pegBadge = person.peg ? `PeG ${person.peg}` : "";
+
+    let html = `<div class="h-node ${lvClass}" id="${id}">
+      <div class="h-node-row" onclick="toggleHNode('${id}')">
+        <span class="h-toggle">${toggle}</span>
+        ${pegBadge ? `<span class="h-badge">${pegBadge}</span>` : ""}
+        <span class="h-name">${person.nama||"—"}</span>
+        <span class="h-meta">${person.jabatan||""}</span>
+        ${hasChildren ? `<span class="h-meta" style="background:var(--surface2);border-radius:99px;padding:1px 8px">${children.length}</span>` : ""}
+      </div>`;
+
+    if (hasChildren) {
+      html += `<div class="h-children hidden" id="${id}-children">`;
+      children.forEach(c => { html += buildNode(c, level + 1); });
+      html += `</div>`;
+    }
+    html += `</div>`;
+    return html;
+  }
+
+  let html = "<div class='h-tree'>";
+  topLevel.forEach(p => { html += buildNode(p, 1); });
+  html += "</div>";
+  container.innerHTML = html;
+}
+
+function toggleHNode(id) {
+  const node = document.getElementById(id);
+  const children = document.getElementById(id + "-children");
+  const toggle = node.querySelector(".h-toggle");
+  if (!children) return;
+  const isHidden = children.classList.toggle("hidden");
+  toggle.textContent = isHidden ? "▸" : "▾";
+}
+
+// Hierarki events
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("h-unit").addEventListener("change", () => {
+    hUnit = document.getElementById("h-unit").value;
+    hLokasi = "";
+    updateHLokasiFilter(hUnit);
+    document.getElementById("h-lokasi").value = "";
+    buildHierarki();
+  });
+  document.getElementById("h-lokasi").addEventListener("change", () => {
+    hLokasi = document.getElementById("h-lokasi").value;
+    buildHierarki();
+  });
+  document.getElementById("h-reset").addEventListener("click", () => {
+    hUnit = ""; hLokasi = "";
+    document.getElementById("h-unit").value = "";
+    document.getElementById("h-lokasi").value = "";
+    updateHLokasiFilter("");
+    buildHierarki();
+  });
+});
+
 async function loadData() {
   try {
     const resp = await fetch(CSV_URL + "&t=" + Date.now());
@@ -587,6 +733,10 @@ async function loadData() {
     const unitList = [...new Set(allData.map(d => d.unit).filter(Boolean))].sort();
     const selU = document.getElementById("f-unit");
     selU.innerHTML = "<option value=\"\">Semua Unit Layanan</option>" +
+      unitList.map(u => `<option value="${u}">${u}</option>`).join("");
+    // Populate hierarki unit filter
+    const hSelU = document.getElementById("h-unit");
+    hSelU.innerHTML = "<option value=\"\">Semua Unit Layanan</option>" +
       unitList.map(u => `<option value="${u}">${u}</option>`).join("");
 
     const jenjangList = [...new Set(allData.map(d => d.jenjang).filter(Boolean))].sort();
