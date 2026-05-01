@@ -685,6 +685,7 @@ function populateHKantor() {
   const list = [...new Set(allData.map(d => d.lokasi).filter(Boolean))].sort();
   const sel = document.getElementById("h-kantor");
   sel.innerHTML = "<option value=''>— Pilih Kantor Induk/UP —</option>" +
+    "<option value='__all__'>Semua Kantor</option>" +
     list.map(l => `<option value="${l}">${l}</option>`).join("");
 }
 
@@ -695,31 +696,34 @@ function buildHierarki() {
     document.getElementById("jenjang-summary").style.display = "none";
     return;
   }
-  const rows = allData.filter(d => d.lokasi === hKantor);
+  const rows = hKantor === "__all__"
+    ? [...allData]
+    : allData.filter(d => d.lokasi === hKantor);
+
   if (!rows.length) {
     container.innerHTML = "<div style='text-align:center;padding:2rem;color:var(--text-hint)'>Tidak ada data.</div>";
     document.getElementById("jenjang-summary").style.display = "none";
     return;
   }
 
-  // Render jenjang summary cards
+  // Render jenjang summary cards sesuai filter
   const jSum = document.getElementById("jenjang-summary");
   const jCount = {};
   rows.forEach(d => { if (d.jenjang) jCount[d.jenjang] = (jCount[d.jenjang]||0) + 1; });
-  jSum.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:0.5rem">
-    <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;font-size:13px">
-      <span style="font-size:11px;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.05em">Total</span>
-      <div style="font-size:20px;font-weight:600">${rows.length}</div>
+  jSum.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem">
+    <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px">
+      <div style="font-size:11px;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Total Pegawai</div>
+      <div style="font-size:22px;font-weight:600">${rows.length}</div>
     </div>
     ${Object.keys(jCount).sort().map(j => `
-      <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;font-size:13px">
-        <span style="font-size:11px;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.05em">${j}</span>
-        <div style="font-size:20px;font-weight:600">${jCount[j]}</div>
+      <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px">
+        <div style="font-size:11px;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">${j}</div>
+        <div style="font-size:22px;font-weight:600">${jCount[j]}</div>
       </div>`).join("")}
   </div>`;
   jSum.style.display = "block";
 
-  // Build hierarchy: find top-level (atasan not in dataset names)
+  // Build hierarchy
   const allNames = new Set(rows.map(d => d.nama));
   const topLevel = rows.filter(d => !d.atasan || !allNames.has(d.atasan));
   const hId = { n: 0 };
@@ -729,14 +733,15 @@ function buildHierarki() {
     const children = rows.filter(d => d.atasan === person.nama && d.nama !== person.nama);
     const hasChildren = children.length > 0;
     const lvClass = `h-lv${Math.min(level, 4)}`;
-    const jabTr  = person.jabatan||"—";
-    const namaTr = person.nama||"—";
     const toggleIcon = hasChildren ? `<span class="h-toggle" id="ti-${id}">▸</span>` : "";
+    const nipHtml  = person.nip  ? `<span style="font-family:'DM Mono',monospace;font-size:10px;opacity:0.7">${person.nip}</span>` : "";
+    const pegHtml  = person.peg  ? `<span class="h-peg-tag">PeG ${person.peg}</span>` : "";
 
     let html = `<div class="h-node ${lvClass}" id="${id}">
       <div class="h-node-row" onclick="toggleHNode('${id}')">
-        <div class="h-node-jab"><span style="flex:1">${jabTr}</span>${toggleIcon}</div>
-        <div class="h-node-nama">${namaTr}</div>
+        <div class="h-node-jab"><span style="flex:1">${person.jabatan||"—"}</span>${toggleIcon}</div>
+        <div class="h-node-nama">${person.nama||"—"}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:3px">${nipHtml}${pegHtml}</div>
       </div>`;
 
     if (hasChildren) {
